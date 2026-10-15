@@ -1,0 +1,56 @@
+name: Build and publish plugin
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+env:
+  PLUGIN_SLUG: wco-inpost
+  WCO_LABS_URL: ${{ vars.WCO_LABS_URL }}
+  WCO_LABS_TOKEN: ${{ secrets.WCO_LABS_RELEASE_TOKEN }}
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: find . -name '*.php' -not -path './vendor/*' -not -path './dist/*' -print0 | xargs -0 -n1 php -l
+      - name: Verify tag matches plugin header
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          HEADER=$(grep -m1 -E '^[[:space:]*]*Version:' "$PLUGIN_SLUG.php" | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]')
+          if [ "$HEADER" != "$VERSION" ]; then
+            echo "Tag $VERSION does not match Version header $HEADER" >&2
+            exit 1
+          fi
+      - name: Build ZIP
+        run: |
+          mkdir -p "dist/$PLUGIN_SLUG"
+          cp "$PLUGIN_SLUG.php" "dist/$PLUGIN_SLUG/"
+          cp -R src "dist/$PLUGIN_SLUG/"
+          if [ -d assets ]; then cp -R assets "dist/$PLUGIN_SLUG/"; fi
+          cd dist
+          zip -qr "$PLUGIN_SLUG.zip" "$PLUGIN_SLUG"
+          shasum -a 256 "$PLUGIN_SLUG.zip" > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PLUGIN_SLUG }}-${{ github.ref_name }}
+          path: |
+            dist/${{ env.PLUGIN_SLUG }}.zip
+            dist/SHA256SUMS
+      - name: Extract changelog for this version
+        if: startsWith(github.ref, 'refs/tags/v') && env.WCO_LABS_TOKEN != ''
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '$0 == "## " v {found=1; print; next} /^## / {found=0} found' CHANGELOG.md > dist/changelog.md
+          test -s dist/changelog.md || { echo "CHANGELOG.md has no section for $VERSION" >&2; exit 1; }
+      - name: Publish release to WCO Labs
+        if: startsWith(github.ref, 'refs/tags/v') && env.WCO_LABS_TOKEN != ''
+        env:
+          STAGED: ${{ vars.WCO_LABS_STAGED == 'true' && '1' || '0' }}
+        run: |
+          curl --fail-with-body -sS -X POST "$WCO_LABS_URL/api/v1/admin/releases" \
+            -H "Authorization: Bearer $WCO_LABS_TOKEN" -H "Accept: application/json" \
+            -F "product=$PLUGIN_SLUG" -F "version=${GITHUB_REF_NAME#v}" \
+            -F "changelog=<dist/changelog.md" -F "package=@dist/$PLUGIN_SLUG.zip" \
+            -F "requires_wp=6.6" -F "requires_php=8.2" -F "staged=$STAGED"
