@@ -60,18 +60,38 @@
         }
     }
 
+    var shippingSelector = '.wc-block-components-shipping-rates-control';
+
+    // W checkoucie blokowym picker trafia z PHP pod cały blok. Przenosimy go pod opcje wysyłki, żeby klient widział go zaraz po wyborze InPost.
+    function placeBlocksPicker(picker) {
+        var control = document.querySelector(shippingSelector);
+        if (!control || !control.parentNode || picker.previousElementSibling === control) {
+            return;
+        }
+        control.parentNode.insertBefore(picker, control.nextSibling);
+    }
+
     function render() {
         var visible = inpostSelected();
         pickers().forEach(function (picker) {
+            if (picker.classList.contains('wco-inpost--blocks')) {
+                placeBlocksPicker(picker);
+            }
             picker.hidden = !visible;
             var selected = picker.querySelector('[data-wco-inpost-selected]');
             var open = picker.querySelector('[data-wco-inpost-open]');
             if (selected) {
+                var text = state.point ? formatSelected() : '';
                 selected.hidden = !state.point;
-                selected.textContent = state.point ? formatSelected() : '';
+                if (selected.textContent !== text) {
+                    selected.textContent = text;
+                }
             }
             if (open) {
-                open.textContent = state.point ? cfg.content.button_change : cfg.content.button_choose;
+                var label = state.point ? cfg.content.button_change : cfg.content.button_choose;
+                if (open.textContent !== label) {
+                    open.textContent = label;
+                }
             }
             var point = picker.querySelector('input[name="wco_inpost_point"]');
             var description = picker.querySelector('input[name="wco_inpost_point_desc"]');
@@ -192,6 +212,20 @@
     }
 
     var data = blocksStore();
+    var blocksRoot = document.querySelector('.wp-block-woocommerce-checkout');
+    if (blocksRoot && window.MutationObserver) {
+        var watchQueued = false;
+        new MutationObserver(function () {
+            if (watchQueued) {
+                return;
+            }
+            watchQueued = true;
+            window.requestAnimationFrame(function () {
+                watchQueued = false;
+                render();
+            });
+        }).observe(blocksRoot, { childList: true, subtree: true });
+    }
     if (data) {
         var queued = false;
         data.subscribe(function () {
