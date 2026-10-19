@@ -3,7 +3,7 @@
  * Plugin Name: MadeIT InPost
  * Plugin URI: https://labs.made-it.pl/en/plugins/madeit-inpost
  * Description: An InPost parcel locker shipping method for WooCommerce with a map to choose the pickup point at checkout.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Requires at least: 6.6
  * Requires PHP: 8.0
  * Requires Plugins: woocommerce
@@ -21,7 +21,7 @@ use Madeit\Inpost\Plugin;
 defined('ABSPATH') || exit;
 
 define('MADEIT_INPOST_FILE', __FILE__);
-define('MADEIT_INPOST_VERSION', '1.0.0');
+define('MADEIT_INPOST_VERSION', '1.0.1');
 
 require_once __DIR__.'/src/Calculator.php';
 require_once __DIR__.'/src/Orders.php';
