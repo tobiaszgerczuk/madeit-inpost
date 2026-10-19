@@ -9,7 +9,7 @@ defined('ABSPATH') || exit;
  */
 final class ShippingMethod extends \WC_Shipping_Method
 {
-    public const ID = 'madeit_inpost';
+    public const ID = Plugin::METHOD_ID;
 
     /**
      * @param  int  $instanceId

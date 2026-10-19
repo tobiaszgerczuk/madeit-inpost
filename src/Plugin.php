@@ -16,6 +16,9 @@ final class Plugin
 
     public const EXTENSION = 'madeit-inpost';
 
+    /** Id of the shipping method. The method class itself is only loaded when WooCommerce initialises shipping. */
+    public const METHOD_ID = 'madeit_inpost';
+
     public const META_POINT = '_madeit_inpost_point';
 
     public const META_POINT_DESCRIPTION = '_madeit_inpost_point_desc';
@@ -105,7 +108,7 @@ final class Plugin
         $rows = [];
         foreach ($zones as $zone) {
             foreach ($zone->get_shipping_methods(false) as $method) {
-                if ($method->id !== ShippingMethod::ID) {
+                if ($method->id !== self::METHOD_ID) {
                     continue;
                 }
                 $rows[] = [
@@ -127,7 +130,8 @@ final class Plugin
             require_once __DIR__.'/ShippingMethod.php';
         });
         add_filter('woocommerce_shipping_methods', static function (array $methods): array {
-            $methods[ShippingMethod::ID] = ShippingMethod::class;
+            require_once __DIR__.'/ShippingMethod.php';
+            $methods[self::METHOD_ID] = ShippingMethod::class;
 
             return $methods;
         });
@@ -169,7 +173,7 @@ final class Plugin
     public static function orderUsesInpost(\WC_Order $order): bool
     {
         foreach ($order->get_shipping_methods() as $item) {
-            if ($item->get_method_id() === ShippingMethod::ID) {
+            if ($item->get_method_id() === self::METHOD_ID) {
                 return true;
             }
         }
@@ -183,7 +187,7 @@ final class Plugin
     private static function chosenIsInpost(array $chosen): bool
     {
         foreach ($chosen as $rate) {
-            if (str_starts_with((string) $rate, ShippingMethod::ID.':')) {
+            if (str_starts_with((string) $rate, self::METHOD_ID.':')) {
                 return true;
             }
         }
@@ -247,7 +251,7 @@ final class Plugin
         wp_register_style('madeit-inpost-geowidget', $base.'/inpost-geowidget.css', [], MADEIT_INPOST_VERSION);
         wp_register_script('madeit-inpost-frontend', plugins_url('assets/frontend.js', MADEIT_INPOST_FILE), ['wp-data'], MADEIT_INPOST_VERSION, true);
         wp_localize_script('madeit-inpost-frontend', 'madeitInpost', [
-            'methodId' => ShippingMethod::ID,
+            'methodId' => self::METHOD_ID,
             'extension' => self::EXTENSION,
             'token' => $settings['geowidget_token'],
             'widgetScript' => $base.'/inpost-geowidget.js',
