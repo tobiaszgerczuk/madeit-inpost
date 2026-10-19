@@ -4,7 +4,7 @@ on:
     tags: ['v*.*.*']
   workflow_dispatch:
 env:
-  PLUGIN_SLUG: wco-inpost
+  PLUGIN_SLUG: madeit-inpost
   WCO_LABS_URL: ${{ vars.WCO_LABS_URL }}
   WCO_LABS_TOKEN: ${{ secrets.WCO_LABS_RELEASE_TOKEN }}
 jobs:

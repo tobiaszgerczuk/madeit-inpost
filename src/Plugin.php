@@ -1,17 +1,17 @@
 <?php
 
-namespace WcoInpost;
+namespace MadeitInpost;
 
 use Automattic\WooCommerce\StoreApi\Exceptions\RouteException;
 use Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema;
 
 final class Plugin
 {
-    public const PAGE = 'wco-inpost';
+    public const PAGE = 'madeit-inpost';
 
-    public const LICENSE_PAGE = 'wco-inpost-license';
+    public const LICENSE_PAGE = 'madeit-inpost-license';
 
-    public const EXTENSION = 'wco-inpost';
+    public const EXTENSION = 'madeit-inpost';
 
     private const GEOWIDGET = 'https://geowidget.inpost.pl';
 
@@ -53,7 +53,7 @@ final class Plugin
      */
     public static function settings(): array
     {
-        $saved = get_option('wco_inpost_settings', []);
+        $saved = get_option('madeit_inpost_settings', []);
         $settings = array_merge(self::settingDefaults(), is_array($saved) ? array_intersect_key($saved, self::settingDefaults()) : []);
         $settings = array_map(static fn ($value): string => trim((string) $value), $settings);
         $settings['accent'] = sanitize_hex_color($settings['accent']) ?: self::settingDefaults()['accent'];
@@ -70,7 +70,7 @@ final class Plugin
      */
     public static function content(): array
     {
-        $saved = get_option('wco_inpost_content', []);
+        $saved = get_option('madeit_inpost_content', []);
         $content = array_merge(self::contentDefaults(), is_array($saved) ? array_intersect_key($saved, self::contentDefaults()) : []);
 
         return array_map(static fn ($value): string => (string) $value, $content);
@@ -135,8 +135,8 @@ final class Plugin
         add_action('wp_enqueue_scripts', [$this, 'frontendAssets']);
         add_action('admin_menu', [$this, 'adminMenu']);
         add_action('admin_enqueue_scripts', [$this, 'adminAssets']);
-        add_action('admin_post_wco_inpost_save', [$this, 'saveSettings']);
-        add_filter('plugin_action_links_'.plugin_basename(WCO_INPOST_FILE), [$this, 'actionLinks']);
+        add_action('admin_post_madeit_inpost_save', [$this, 'saveSettings']);
+        add_filter('plugin_action_links_'.plugin_basename(MADEIT_INPOST_FILE), [$this, 'actionLinks']);
         (new Orders)->register();
     }
 
@@ -190,18 +190,18 @@ final class Plugin
         $settings = self::settings();
         $content = self::content();
         $inputs = $placement === 'classic'
-            ? '<input type="hidden" name="wco_inpost_point" value=""><input type="hidden" name="wco_inpost_point_desc" value="">'
+            ? '<input type="hidden" name="madeit_inpost_point" value=""><input type="hidden" name="madeit_inpost_point_desc" value="">'
             : '';
         $hint = $settings['geowidget_token'] === '' ? 'Wpisz kod paczkomatu InPost, do którego mamy wysłać zamówienie.' : $content['hint'];
         $manual = $settings['geowidget_token'] === ''
-            ? '<label class="wco-inpost__manual"><span>Kod punktu InPost</span><input type="text" data-wco-inpost-manual maxlength="20" placeholder="Np. WAW01M" autocomplete="off"></label>'
+            ? '<label class="madeit-inpost__manual"><span>Kod punktu InPost</span><input type="text" data-madeit-inpost-manual maxlength="20" placeholder="Np. WAW01M" autocomplete="off"></label>'
             : '';
 
-        return '<div class="wco-inpost wco-inpost--'.esc_attr($placement).'" data-wco-inpost hidden style="--wco-inpost-accent:'.esc_attr($settings['accent']).'">'
-            .'<p class="wco-inpost__hint">'.esc_html($hint).'</p>'
-            .($settings['geowidget_token'] !== '' ? '<button type="button" class="wco-inpost__button" data-wco-inpost-open>'.esc_html($content['button_choose']).'</button>' : '')
+        return '<div class="madeit-inpost madeit-inpost--'.esc_attr($placement).'" data-madeit-inpost hidden style="--madeit-inpost-accent:'.esc_attr($settings['accent']).'">'
+            .'<p class="madeit-inpost__hint">'.esc_html($hint).'</p>'
+            .($settings['geowidget_token'] !== '' ? '<button type="button" class="madeit-inpost__button" data-madeit-inpost-open>'.esc_html($content['button_choose']).'</button>' : '')
             .$manual
-            .'<p class="wco-inpost__selected" data-wco-inpost-selected role="status" aria-live="polite" hidden></p>'
+            .'<p class="madeit-inpost__selected" data-madeit-inpost-selected role="status" aria-live="polite" hidden></p>'
             .$inputs
             .'</div>';
     }
@@ -209,7 +209,7 @@ final class Plugin
     public function classicPicker(): void
     {
         $this->enqueueCheckout();
-        echo '<tr class="wco-inpost-row"><td colspan="2">'.$this->pickerMarkup('classic').'</td></tr>'; // Znaczniki są escapowane przy budowaniu.
+        echo '<tr class="madeit-inpost-row"><td colspan="2">'.$this->pickerMarkup('classic').'</td></tr>'; // Znaczniki są escapowane przy budowaniu.
     }
 
     public function blockPicker(string $content, array $block): string
@@ -224,21 +224,21 @@ final class Plugin
 
     private function enqueueCheckout(): void
     {
-        wp_enqueue_script('wco-inpost-frontend');
-        wp_enqueue_style('wco-inpost-frontend');
-        wp_enqueue_style('wco-inpost-geowidget');
+        wp_enqueue_script('madeit-inpost-frontend');
+        wp_enqueue_style('madeit-inpost-frontend');
+        wp_enqueue_style('madeit-inpost-geowidget');
     }
 
     public function frontendAssets(): void
     {
-        $directory = plugin_dir_path(WCO_INPOST_FILE).'assets/';
+        $directory = plugin_dir_path(MADEIT_INPOST_FILE).'assets/';
         $settings = self::settings();
         $content = self::content();
         $base = $settings['sandbox'] === 'yes' ? self::GEOWIDGET_SANDBOX : self::GEOWIDGET;
-        wp_register_style('wco-inpost-frontend', plugins_url('assets/frontend.css', WCO_INPOST_FILE), [], (string) filemtime($directory.'frontend.css'));
-        wp_register_style('wco-inpost-geowidget', $settings['geowidget_token'] !== '' ? $base.'/inpost-geowidget.css' : false, [], null);
-        wp_register_script('wco-inpost-frontend', plugins_url('assets/frontend.js', WCO_INPOST_FILE), ['wp-data'], (string) filemtime($directory.'frontend.js'), true);
-        wp_localize_script('wco-inpost-frontend', 'wcoInpost', [
+        wp_register_style('madeit-inpost-frontend', plugins_url('assets/frontend.css', MADEIT_INPOST_FILE), [], (string) filemtime($directory.'frontend.css'));
+        wp_register_style('madeit-inpost-geowidget', $settings['geowidget_token'] !== '' ? $base.'/inpost-geowidget.css' : false, [], null);
+        wp_register_script('madeit-inpost-frontend', plugins_url('assets/frontend.js', MADEIT_INPOST_FILE), ['wp-data'], (string) filemtime($directory.'frontend.js'), true);
+        wp_localize_script('madeit-inpost-frontend', 'madeitInpost', [
             'methodId' => ShippingMethod::ID,
             'extension' => self::EXTENSION,
             'token' => $settings['geowidget_token'],
@@ -259,7 +259,7 @@ final class Plugin
         if (! self::chosenIsInpost($chosen) || self::settings()['require_point'] !== 'yes') {
             return;
         }
-        $point = isset($_POST['wco_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['wco_inpost_point']))) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+        $point = isset($_POST['madeit_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['madeit_inpost_point']))) : ''; // phpcs:ignore WordPress.Security.NonceVerification
         if (! Calculator::isValidPointName($point)) {
             wc_add_notice(esc_html(self::content()['missing']), 'error');
         }
@@ -273,8 +273,8 @@ final class Plugin
         if (! self::orderUsesInpost($order)) {
             return;
         }
-        $point = isset($_POST['wco_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['wco_inpost_point']))) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-        $description = isset($_POST['wco_inpost_point_desc']) ? sanitize_text_field(wp_unslash($_POST['wco_inpost_point_desc'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+        $point = isset($_POST['madeit_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['madeit_inpost_point']))) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+        $description = isset($_POST['madeit_inpost_point_desc']) ? sanitize_text_field(wp_unslash($_POST['madeit_inpost_point_desc'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification
         $this->storePoint($order, $point, $description);
     }
 
@@ -288,7 +288,7 @@ final class Plugin
         $point = strtoupper(sanitize_text_field((string) ($data['point'] ?? '')));
         $description = sanitize_text_field((string) ($data['description'] ?? ''));
         if (self::settings()['require_point'] === 'yes' && ! Calculator::isValidPointName($point)) {
-            throw new RouteException('wco_inpost_missing_point', esc_html(self::content()['missing']), 400);
+            throw new RouteException('madeit_inpost_missing_point', esc_html(self::content()['missing']), 400);
         }
         $this->storePoint($order, $point, $description);
     }
@@ -318,7 +318,7 @@ final class Plugin
     {
         $line = $this->pointLine($order);
         if ($line !== '') {
-            echo '<section class="wco-inpost-order"><h2 class="woocommerce-column__title">Paczkomat InPost</h2><p>'.esc_html($line).'</p></section>';
+            echo '<section class="madeit-inpost-order"><h2 class="woocommerce-column__title">Paczkomat InPost</h2><p>'.esc_html($line).'</p></section>';
         }
     }
 
@@ -333,7 +333,7 @@ final class Plugin
 
     public function adminMenu(): void
     {
-        add_menu_page('WCO InPost', 'WCO InPost', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage'], 'dashicons-location-alt', 58);
+        add_menu_page('Madeit InPost', 'Madeit InPost', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage'], 'dashicons-location-alt', 58);
         add_submenu_page(self::PAGE, 'Ustawienia', 'Ustawienia', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage']);
     }
 
@@ -354,9 +354,9 @@ final class Plugin
         if (! in_array($page, [self::PAGE, self::LICENSE_PAGE], true)) {
             return;
         }
-        $directory = plugin_dir_path(WCO_INPOST_FILE).'assets/';
-        wp_enqueue_style('wco-inpost-admin', plugins_url('assets/admin.css', WCO_INPOST_FILE), [], (string) filemtime($directory.'admin.css'));
-        wp_enqueue_style('wco-inpost-preview', plugins_url('assets/frontend.css', WCO_INPOST_FILE), [], (string) filemtime($directory.'frontend.css'));
+        $directory = plugin_dir_path(MADEIT_INPOST_FILE).'assets/';
+        wp_enqueue_style('madeit-inpost-admin', plugins_url('assets/admin.css', MADEIT_INPOST_FILE), [], (string) filemtime($directory.'admin.css'));
+        wp_enqueue_style('madeit-inpost-preview', plugins_url('assets/frontend.css', MADEIT_INPOST_FILE), [], (string) filemtime($directory.'frontend.css'));
     }
 
     public function settingsPage(): void
@@ -369,7 +369,7 @@ final class Plugin
         if (! current_user_can('manage_woocommerce')) {
             wp_die('Brak uprawnień.');
         }
-        check_admin_referer('wco_inpost_save');
+        check_admin_referer('madeit_inpost_save');
         $tab = isset($_POST['tab']) ? sanitize_key(wp_unslash($_POST['tab'])) : 'scope';
         $settings = self::settings();
         if ($tab === 'scope') {
@@ -378,17 +378,17 @@ final class Plugin
             $settings['default_size'] = Calculator::normalizeSize($size);
             $method = isset($_POST['sending_method']) ? sanitize_key(wp_unslash($_POST['sending_method'])) : '';
             $settings['sending_method'] = $method === 'parcel_locker' ? 'parcel_locker' : 'dispatch_order';
-            update_option('wco_inpost_settings', $settings, false);
+            update_option('madeit_inpost_settings', $settings, false);
         } elseif ($tab === 'connection') {
             $settings['geowidget_token'] = isset($_POST['geowidget_token']) ? trim(sanitize_text_field(wp_unslash($_POST['geowidget_token']))) : '';
             $settings['organization_id'] = isset($_POST['organization_id']) ? preg_replace('/\D+/', '', wp_unslash($_POST['organization_id'])) : '';
             $settings['api_token'] = isset($_POST['api_token']) ? trim(sanitize_text_field(wp_unslash($_POST['api_token']))) : '';
             $settings['sandbox'] = ! empty($_POST['sandbox']) ? 'yes' : 'no';
-            update_option('wco_inpost_settings', $settings, false);
+            update_option('madeit_inpost_settings', $settings, false);
         } elseif ($tab === 'appearance') {
             $accent = isset($_POST['accent']) ? sanitize_hex_color(wp_unslash($_POST['accent'])) : null;
             $settings['accent'] = $accent ?: self::settingDefaults()['accent'];
-            update_option('wco_inpost_settings', $settings, false);
+            update_option('madeit_inpost_settings', $settings, false);
         } else {
             $tab = 'content';
             $content = [];
@@ -396,9 +396,9 @@ final class Plugin
                 $value = isset($_POST[$key]) ? sanitize_textarea_field(wp_unslash($_POST[$key])) : $default;
                 $content[$key] = trim($value) === '' ? $default : $value;
             }
-            update_option('wco_inpost_content', $content, false);
+            update_option('madeit_inpost_content', $content, false);
         }
-        wp_safe_redirect(admin_url('admin.php?page='.self::PAGE.'&tab='.$tab.'&wco_notice=settings'));
+        wp_safe_redirect(admin_url('admin.php?page='.self::PAGE.'&tab='.$tab.'&madeit_notice=settings'));
         exit;
     }
 }

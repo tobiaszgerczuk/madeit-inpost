@@ -1,22 +1,22 @@
 <?php
 
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
-use WcoInpost\Plugin;
-use WcoInpost\Updater;
+use MadeitInpost\Plugin;
+use MadeitInpost\Updater;
 
 /**
- * Plugin Name: WCO InPost
+ * Plugin Name: Madeit InPost
  * Description: Wybór paczkomatu InPost na mapie w checkoucie WooCommerce oraz tworzenie przesyłek i etykiet przez ShipX.
  * Version: 0.1.0
  * Requires at least: 6.6
  * Requires PHP: 8.2
  * Requires Plugins: woocommerce
  * Author: WCO Labs
- * Update URI: https://wco-labs.pl/updates/wco-inpost
+ * Update URI: https://labs.made-it.pl/updates/madeit-inpost
  */
 defined('ABSPATH') || exit;
 
-define('WCO_INPOST_FILE', __FILE__);
+define('MADEIT_INPOST_FILE', __FILE__);
 
 require_once __DIR__.'/src/Calculator.php';
 require_once __DIR__.'/src/ShipX.php';
@@ -38,6 +38,6 @@ add_action('plugins_loaded', static function (): void {
     }
 
     (new Plugin)->register();
-    $apiUrl = defined('WCO_LABS_API_URL') ? WCO_LABS_API_URL : 'https://wco-labs.pl';
+    $apiUrl = defined('WCO_LABS_API_URL') ? WCO_LABS_API_URL : 'https://labs.made-it.pl';
     (new Updater(__FILE__, $apiUrl))->register();
 });

@@ -1,37 +1,37 @@
 <?php
 
-namespace WcoInpost;
+namespace MadeitInpost;
 
 /**
  * Obsługa zamówień w panelu: wybrany punkt, tworzenie przesyłki ShipX i pobieranie etykiety.
  */
 final class Orders
 {
-    public const META_POINT = '_wco_inpost_point';
+    public const META_POINT = '_madeit_inpost_point';
 
-    public const META_POINT_DESCRIPTION = '_wco_inpost_point_desc';
+    public const META_POINT_DESCRIPTION = '_madeit_inpost_point_desc';
 
-    public const META_SIZE = '_wco_inpost_size';
+    public const META_SIZE = '_madeit_inpost_size';
 
-    public const META_SHIPMENT = '_wco_inpost_shipment_id';
+    public const META_SHIPMENT = '_madeit_inpost_shipment_id';
 
-    public const META_TRACKING = '_wco_inpost_tracking';
+    public const META_TRACKING = '_madeit_inpost_tracking';
 
-    public const META_STATUS = '_wco_inpost_status';
+    public const META_STATUS = '_madeit_inpost_status';
 
     public function register(): void
     {
         add_action('add_meta_boxes', [$this, 'metaBox']);
-        add_action('admin_post_wco_inpost_create', [$this, 'create']);
-        add_action('admin_post_wco_inpost_refresh', [$this, 'refresh']);
-        add_action('admin_post_wco_inpost_label', [$this, 'label']);
+        add_action('admin_post_madeit_inpost_create', [$this, 'create']);
+        add_action('admin_post_madeit_inpost_refresh', [$this, 'refresh']);
+        add_action('admin_post_madeit_inpost_label', [$this, 'label']);
         add_action('admin_notices', [$this, 'notices']);
     }
 
     public function metaBox(): void
     {
         $screen = function_exists('wc_get_page_screen_id') ? wc_get_page_screen_id('shop-order') : 'shop_order';
-        add_meta_box('wco-inpost-order', 'InPost', [$this, 'renderMetaBox'], $screen, 'side', 'high');
+        add_meta_box('madeit-inpost-order', 'InPost', [$this, 'renderMetaBox'], $screen, 'side', 'high');
     }
 
     /**
@@ -58,13 +58,13 @@ final class Orders
             echo '<p><strong>Punkt:</strong> '.esc_html($point.($description !== '' ? ', '.$description : '')).'</p>';
             echo '<p><strong>Status:</strong> '.esc_html($status !== '' ? $status : 'utworzona').'</p>';
             echo '<p><strong>Numer przesyłki:</strong> '.esc_html($tracking !== '' ? $tracking : 'jeszcze nie nadano (odśwież za chwilę)').'</p>';
-            echo '<p><a class="button button-primary" href="'.esc_url($this->actionUrl('wco_inpost_label', $order)).'">Pobierz etykietę (PDF)</a> ';
-            echo '<a class="button" href="'.esc_url($this->actionUrl('wco_inpost_refresh', $order)).'">Odśwież status</a></p>';
+            echo '<p><a class="button button-primary" href="'.esc_url($this->actionUrl('madeit_inpost_label', $order)).'">Pobierz etykietę (PDF)</a> ';
+            echo '<a class="button" href="'.esc_url($this->actionUrl('madeit_inpost_refresh', $order)).'">Odśwież status</a></p>';
 
             return;
         }
-        echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="wco_inpost_create"><input type="hidden" name="order_id" value="'.esc_attr((string) $order->get_id()).'">';
-        wp_nonce_field('wco_inpost_create_'.$order->get_id());
+        echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="madeit_inpost_create"><input type="hidden" name="order_id" value="'.esc_attr((string) $order->get_id()).'">';
+        wp_nonce_field('madeit_inpost_create_'.$order->get_id());
         echo '<p><label><strong>Kod punktu</strong><br><input type="text" name="point" class="widefat" value="'.esc_attr($point).'" placeholder="Np. WAW01M" maxlength="20"></label></p>';
         if ($description !== '') {
             echo '<p class="description">'.esc_html($description).'</p>';
@@ -76,7 +76,7 @@ final class Orders
         echo '</select></label></p>';
         echo '<p><button type="submit" class="button button-primary">Utwórz przesyłkę</button></p></form>';
         if (! Plugin::shipx()->isConfigured()) {
-            echo '<p class="description">Najpierw uzupełnij połączenie z ShipX w ustawieniach WCO InPost.</p>';
+            echo '<p class="description">Najpierw uzupełnij połączenie z ShipX w ustawieniach Madeit InPost.</p>';
         }
     }
 
@@ -88,10 +88,10 @@ final class Orders
     private function backUrl(\WC_Order $order, string $notice, string $detail = ''): string
     {
         if ($detail !== '') {
-            set_transient('wco_inpost_error_'.get_current_user_id(), $detail, 60);
+            set_transient('madeit_inpost_error_'.get_current_user_id(), $detail, 60);
         }
 
-        return add_query_arg('wco_inpost_notice', $notice, $order->get_edit_order_url());
+        return add_query_arg('madeit_inpost_notice', $notice, $order->get_edit_order_url());
     }
 
     private function loadOrder(string $action, string $nonceField = '_wpnonce'): \WC_Order
@@ -111,7 +111,7 @@ final class Orders
 
     public function create(): void
     {
-        $order = $this->loadOrder('wco_inpost_create');
+        $order = $this->loadOrder('madeit_inpost_create');
         $point = isset($_POST['point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['point']))) : '';
         $size = Calculator::normalizeSize(isset($_POST['size']) ? sanitize_text_field(wp_unslash($_POST['size'])) : 'A');
         if (! Calculator::isValidPointName($point)) {
@@ -156,9 +156,9 @@ final class Orders
 
     public function refresh(): void
     {
-        $order = $this->loadOrder('wco_inpost_refresh');
+        $order = $this->loadOrder('madeit_inpost_refresh');
         $id = (string) $order->get_meta(self::META_SHIPMENT);
-        $result = $id !== '' ? Plugin::shipx()->shipment($id) : new \WP_Error('wco_inpost_none', 'To zamówienie nie ma przesyłki InPost.');
+        $result = $id !== '' ? Plugin::shipx()->shipment($id) : new \WP_Error('madeit_inpost_none', 'To zamówienie nie ma przesyłki InPost.');
         if (is_wp_error($result)) {
             wp_safe_redirect($this->backUrl($order, 'error', $result->get_error_message()));
             exit;
@@ -176,7 +176,7 @@ final class Orders
 
     public function label(): void
     {
-        $order = $this->loadOrder('wco_inpost_label');
+        $order = $this->loadOrder('madeit_inpost_label');
         $pdf = Plugin::shipx()->label((string) $order->get_meta(self::META_SHIPMENT));
         if (is_wp_error($pdf)) {
             wp_safe_redirect($this->backUrl($order, 'error', $pdf->get_error_message()));
@@ -191,13 +191,13 @@ final class Orders
 
     public function notices(): void
     {
-        $notice = isset($_GET['wco_inpost_notice']) ? sanitize_key(wp_unslash($_GET['wco_inpost_notice'])) : '';
+        $notice = isset($_GET['madeit_inpost_notice']) ? sanitize_key(wp_unslash($_GET['madeit_inpost_notice'])) : '';
         if ($notice === '') {
             return;
         }
         if ($notice === 'error') {
-            $detail = (string) get_transient('wco_inpost_error_'.get_current_user_id());
-            delete_transient('wco_inpost_error_'.get_current_user_id());
+            $detail = (string) get_transient('madeit_inpost_error_'.get_current_user_id());
+            delete_transient('madeit_inpost_error_'.get_current_user_id());
             echo '<div class="notice notice-error"><p>InPost: '.esc_html($detail !== '' ? $detail : 'operacja nie powiodła się.').'</p></div>';
         } elseif (in_array($notice, ['created', 'refreshed'], true)) {
             echo '<div class="notice notice-success is-dismissible"><p>'.($notice === 'created' ? 'Przesyłka InPost została utworzona.' : 'Status przesyłki odświeżony.').'</p></div>';

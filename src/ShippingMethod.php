@@ -1,6 +1,6 @@
 <?php
 
-namespace WcoInpost;
+namespace MadeitInpost;
 
 defined('ABSPATH') || exit;
 
@@ -9,7 +9,7 @@ defined('ABSPATH') || exit;
  */
 final class ShippingMethod extends \WC_Shipping_Method
 {
-    public const ID = 'wco_inpost';
+    public const ID = 'madeit_inpost';
 
     /**
      * @param  int  $instanceId
@@ -18,7 +18,7 @@ final class ShippingMethod extends \WC_Shipping_Method
     {
         $this->id = self::ID;
         $this->instance_id = absint($instanceId);
-        $this->method_title = 'Paczkomat InPost (WCO)';
+        $this->method_title = 'Paczkomat InPost (Madeit)';
         $this->method_description = 'Dostawa do wybranego na mapie paczkomatu InPost.';
         $this->supports = ['shipping-zones', 'instance-settings', 'instance-settings-modal'];
         $this->init_form_fields();

@@ -6,7 +6,7 @@
 
 require __DIR__.'/../src/Calculator.php';
 
-use WcoInpost\Calculator;
+use MadeitInpost\Calculator;
 
 function expectThat(bool $condition, string $message): void
 {

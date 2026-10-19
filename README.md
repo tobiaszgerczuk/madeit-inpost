@@ -1,4 +1,4 @@
-# WCO InPost
+# Madeit InPost
 
 Wybór paczkomatu InPost na mapie w checkoucie WooCommerce (klasycznym i blokowym) oraz tworzenie przesyłek i etykiet przez ShipX.
 
@@ -12,8 +12,8 @@ Wybór paczkomatu InPost na mapie w checkoucie WooCommerce (klasycznym i blokowy
 
 ## Konfiguracja
 
-1. WooCommerce → Ustawienia → Wysyłka → strefa → dodaj „Paczkomat InPost (WCO)”.
-2. WCO InPost → Połączenie: token mapy (Geowidget), identyfikator organizacji i token API ShipX z Managera Paczek.
+1. WooCommerce → Ustawienia → Wysyłka → strefa → dodaj „Paczkomat InPost (Madeit)”.
+2. Madeit InPost → Połączenie: token mapy (Geowidget), identyfikator organizacji i token API ShipX z Managera Paczek.
 3. Zakładka Zakres: domyślny gabaryt i sposób nadania.
 
 ## Testy

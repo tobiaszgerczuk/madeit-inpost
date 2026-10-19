@@ -1,6 +1,6 @@
 <?php
 
-namespace WcoInpost;
+namespace MadeitInpost;
 
 final class Updater
 {
@@ -23,12 +23,12 @@ final class Updater
         add_filter('upgrader_pre_download', [$this, 'download'], 10, 4);
         add_filter('plugins_api', [$this, 'pluginInformation'], 10, 3);
         add_action('admin_menu', [$this, 'menu']);
-        add_action('admin_post_wco_inpost_license', [$this, 'saveLicense']);
+        add_action('admin_post_madeit_inpost_license', [$this, 'saveLicense']);
     }
 
     private function request(string $path): ?array
     {
-        $key = (string) get_option('wco_inpost_license_key', '');
+        $key = (string) get_option('madeit_inpost_license_key', '');
         if ($key === '' || str_ends_with($this->apiUrl, '.invalid')) {
             return null;
         }
@@ -78,8 +78,8 @@ final class Updater
             return $transient;
         }
         $transient->response[$this->basename] = (object) [
-            'id' => $this->apiUrl.'/updates/wco-inpost',
-            'slug' => 'wco-inpost',
+            'id' => $this->apiUrl.'/updates/madeit-inpost',
+            'slug' => 'madeit-inpost',
             'plugin' => $this->basename,
             'new_version' => $data['version'],
             'package' => $data['download_url'],
@@ -93,7 +93,7 @@ final class Updater
 
     public function pluginInformation($result, $action, $args)
     {
-        if ($action !== 'plugin_information' || ($args->slug ?? null) !== 'wco-inpost') {
+        if ($action !== 'plugin_information' || ($args->slug ?? null) !== 'madeit-inpost') {
             return $result;
         }
         $data = $this->request('updates/check');
@@ -102,8 +102,8 @@ final class Updater
         }
 
         return (object) [
-            'name' => 'WCO InPost',
-            'slug' => 'wco-inpost',
+            'name' => 'Madeit InPost',
+            'slug' => 'madeit-inpost',
             'version' => $data['version'],
             'author' => 'WCO Labs',
             'requires' => $data['requires_wp'] ?? '',
@@ -120,7 +120,7 @@ final class Updater
         }
         $data = $this->request('updates/check');
         if (empty($data['download_url'])) {
-            return new \WP_Error('wco_inpost_update', 'Nie można pobrać aktualizacji. Sprawdź licencję i połączenie z WCO Labs.');
+            return new \WP_Error('madeit_inpost_update', 'Nie można pobrać aktualizacji. Sprawdź licencję i połączenie z WCO Labs.');
         }
 
         return download_url($data['download_url']);
@@ -133,7 +133,7 @@ final class Updater
      */
     public function licenseStatus(bool $refresh = false): array
     {
-        $key = (string) get_option('wco_inpost_license_key', '');
+        $key = (string) get_option('madeit_inpost_license_key', '');
         if ($key === '') {
             return ['state' => 'none'];
         }
@@ -141,7 +141,7 @@ final class Updater
             return ['state' => 'unavailable'];
         }
         $fingerprint = md5($key.home_url('/'));
-        $cached = get_transient('wco_inpost_license_status');
+        $cached = get_transient('madeit_inpost_license_status');
         if (! $refresh && is_array($cached) && ($cached['fingerprint'] ?? '') === $fingerprint) {
             return $cached;
         }
@@ -154,7 +154,7 @@ final class Updater
                 : ['state' => 'unreachable', 'message' => $this->lastError ?: 'Nie udało się sprawdzić statusu licencji.'];
         }
         $data['fingerprint'] = $fingerprint;
-        set_transient('wco_inpost_license_status', $data, 5 * MINUTE_IN_SECONDS);
+        set_transient('madeit_inpost_license_status', $data, 5 * MINUTE_IN_SECONDS);
 
         return $data;
     }
@@ -184,7 +184,7 @@ final class Updater
 
     public function menu(): void
     {
-        add_submenu_page('wco-inpost', 'Licencja WCO InPost', 'Licencja', 'manage_woocommerce', 'wco-inpost-license', [$this, 'settings']);
+        add_submenu_page('madeit-inpost', 'Licencja Madeit InPost', 'Licencja', 'manage_woocommerce', 'madeit-inpost-license', [$this, 'settings']);
     }
 
     public function settings(): void
@@ -192,31 +192,31 @@ final class Updater
         if (! current_user_can('manage_woocommerce')) {
             wp_die('Brak uprawnień.');
         }
-        $key = (string) get_option('wco_inpost_license_key', '');
+        $key = (string) get_option('madeit_inpost_license_key', '');
         $apiReady = ! str_ends_with($this->apiUrl, '.invalid');
-        $notice = isset($_GET['wco_notice']) ? sanitize_key(wp_unslash($_GET['wco_notice'])) : '';
+        $notice = isset($_GET['madeit_notice']) ? sanitize_key(wp_unslash($_GET['madeit_notice'])) : '';
         $messages = [
             'active' => 'Licencja została aktywowana dla tego sklepu.',
             'failed' => 'Nie udało się aktywować licencji. Sprawdź klucz i połączenie z WCO Labs.',
             'unavailable' => 'Klucz został zapisany. Aktywacja będzie dostępna po podłączeniu publicznego adresu WCO Labs.',
             'cleared' => 'Klucz licencji został usunięty.',
         ];
-        echo '<div class="wrap wco-admin"><div class="wco-hero"><div><span class="wco-eyebrow">WCO FREE SHIPPING / DOSTĘP</span><h1>Licencja</h1><p>Zarządzaj kluczem licencji i aktualizacjami wtyczki dla tego sklepu.</p></div>';
-        echo '<a class="wco-button wco-button-light" href="'.esc_url(admin_url('admin.php?page=wco-inpost')).'">← Wróć do ustawień</a></div>';
+        echo '<div class="wrap madeit-admin"><div class="madeit-hero"><div><span class="madeit-eyebrow">MADEIT FREE SHIPPING / DOSTĘP</span><h1>Licencja</h1><p>Zarządzaj kluczem licencji i aktualizacjami wtyczki dla tego sklepu.</p></div>';
+        echo '<a class="madeit-button madeit-button-light" href="'.esc_url(admin_url('admin.php?page=madeit-inpost')).'">← Wróć do ustawień</a></div>';
         if (isset($messages[$notice])) {
-            $detail = $notice === 'failed' ? (string) get_transient('wco_inpost_license_error') : '';
-            echo '<div class="wco-notice'.($notice === 'failed' ? ' wco-notice-error' : '').'" role="status">'.esc_html($messages[$notice]).($detail !== '' ? ' '.esc_html($detail) : '').'</div>';
+            $detail = $notice === 'failed' ? (string) get_transient('madeit_inpost_license_error') : '';
+            echo '<div class="madeit-notice'.($notice === 'failed' ? ' madeit-notice-error' : '').'" role="status">'.esc_html($messages[$notice]).($detail !== '' ? ' '.esc_html($detail) : '').'</div>';
         }
-        echo '<div class="wco-license-layout"><section class="wco-card wco-license-card"><span class="wco-eyebrow">KLUCZ LICENCJI</span><h2>Połącz sklep z WCO Labs</h2><p>Klucz znajdziesz na koncie klienta po zakupie wtyczki. Jedna licencja obejmuje jeden sklep.</p>';
-        echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="wco_inpost_license">';
-        wp_nonce_field('wco_inpost_license', 'wco_inpost_license_nonce');
-        echo '<label><span>Klucz licencji</span><input type="password" name="wco_inpost_license_key" value="'.esc_attr($key).'" autocomplete="off" spellcheck="false" placeholder="Wklej klucz licencji"></label>';
-        echo '<button class="wco-button wco-button-primary" type="submit">'.($apiReady ? 'Zapisz i aktywuj' : 'Zapisz klucz').'</button></form></section>';
+        echo '<div class="madeit-license-layout"><section class="madeit-card madeit-license-card"><span class="madeit-eyebrow">KLUCZ LICENCJI</span><h2>Połącz sklep z WCO Labs</h2><p>Klucz znajdziesz na koncie klienta po zakupie wtyczki. Jedna licencja obejmuje jeden sklep.</p>';
+        echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="madeit_inpost_license">';
+        wp_nonce_field('madeit_inpost_license', 'madeit_inpost_license_nonce');
+        echo '<label><span>Klucz licencji</span><input type="password" name="madeit_inpost_license_key" value="'.esc_attr($key).'" autocomplete="off" spellcheck="false" placeholder="Wklej klucz licencji"></label>';
+        echo '<button class="madeit-button madeit-button-primary" type="submit">'.($apiReady ? 'Zapisz i aktywuj' : 'Zapisz klucz').'</button></form></section>';
         // Ekran otwiera się rzadko i ma pokazywać aktualny stan, więc zawsze pytamy serwer (bez bufora).
         $info = $this->describeStatus($this->licenseStatus(true));
-        echo '<aside class="wco-card wco-license-info"><span class="wco-eyebrow">STATUS</span><div class="wco-license-state"><span class="wco-state-icon is-'.esc_attr($info['tone']).'">'.esc_html($info['icon']).'</span><div><strong>'.esc_html($info['title']).'</strong><p>'.wp_kses($info['text'], ['a' => ['href' => [], 'target' => [], 'rel' => []]]).'</p></div></div>';
-        echo '<div class="wco-license-meta"><span>Adres sklepu</span><strong>'.esc_html(home_url('/')).'</strong></div>';
-        echo '<div class="wco-license-meta"><span>Aktualizacje</span><strong>'.esc_html($info['updates']).'</strong></div></aside></div></div>';
+        echo '<aside class="madeit-card madeit-license-info"><span class="madeit-eyebrow">STATUS</span><div class="madeit-license-state"><span class="madeit-state-icon is-'.esc_attr($info['tone']).'">'.esc_html($info['icon']).'</span><div><strong>'.esc_html($info['title']).'</strong><p>'.wp_kses($info['text'], ['a' => ['href' => [], 'target' => [], 'rel' => []]]).'</p></div></div>';
+        echo '<div class="madeit-license-meta"><span>Adres sklepu</span><strong>'.esc_html(home_url('/')).'</strong></div>';
+        echo '<div class="madeit-license-meta"><span>Aktualizacje</span><strong>'.esc_html($info['updates']).'</strong></div></aside></div></div>';
     }
 
     public function saveLicense(): void
@@ -224,26 +224,26 @@ final class Updater
         if (! current_user_can('manage_woocommerce')) {
             wp_die('Brak uprawnień.');
         }
-        check_admin_referer('wco_inpost_license', 'wco_inpost_license_nonce');
-        $key = sanitize_text_field(wp_unslash($_POST['wco_inpost_license_key'] ?? ''));
+        check_admin_referer('madeit_inpost_license', 'madeit_inpost_license_nonce');
+        $key = sanitize_text_field(wp_unslash($_POST['madeit_inpost_license_key'] ?? ''));
         if ($key === '' && ! str_ends_with($this->apiUrl, '.invalid')) {
             // Free the license slot on WCO Labs before the key is forgotten.
             $this->request('licenses/deactivate');
         }
         $key = preg_replace('/\s+/', '', $key) ?? $key;
         if ($key !== '' && ! preg_match('/^[A-Za-z0-9]{32}$/', $key)) {
-            set_transient('wco_inpost_license_error', 'To nie wygląda na klucz licencji. Klucz ma 32 znaki (litery i cyfry), a podana wartość ma '.strlen($key).'.', 60);
-            wp_safe_redirect(admin_url('admin.php?page=wco-inpost-license&wco_notice=failed'));
+            set_transient('madeit_inpost_license_error', 'To nie wygląda na klucz licencji. Klucz ma 32 znaki (litery i cyfry), a podana wartość ma '.strlen($key).'.', 60);
+            wp_safe_redirect(admin_url('admin.php?page=madeit-inpost-license&madeit_notice=failed'));
             exit;
         }
-        update_option('wco_inpost_license_key', $key, false);
-        delete_transient('wco_inpost_license_error');
-        delete_transient('wco_inpost_license_status');
+        update_option('madeit_inpost_license_key', $key, false);
+        delete_transient('madeit_inpost_license_error');
+        delete_transient('madeit_inpost_license_status');
         $notice = $key === '' ? 'cleared' : (str_ends_with($this->apiUrl, '.invalid') ? 'unavailable' : (($this->request('licenses/activate')['status'] ?? null) === 'active' ? 'active' : 'failed'));
         if ($notice === 'failed' && $this->lastError !== '') {
-            set_transient('wco_inpost_license_error', $this->lastError, 60);
+            set_transient('madeit_inpost_license_error', $this->lastError, 60);
         }
-        wp_safe_redirect(admin_url('admin.php?page=wco-inpost-license&wco_notice='.$notice));
+        wp_safe_redirect(admin_url('admin.php?page=madeit-inpost-license&madeit_notice='.$notice));
         exit;
     }
 }

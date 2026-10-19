@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    var cfg = window.wcoInpost;
+    var cfg = window.madeitInpost;
     if (!cfg) {
         return;
     }
@@ -16,7 +16,7 @@
     var widgetLoaded = false;
 
     function pickers() {
-        return document.querySelectorAll('[data-wco-inpost]');
+        return document.querySelectorAll('[data-madeit-inpost]');
     }
 
     function blocksStore() {
@@ -74,12 +74,12 @@
     function render() {
         var visible = inpostSelected();
         pickers().forEach(function (picker) {
-            if (picker.classList.contains('wco-inpost--blocks')) {
+            if (picker.classList.contains('madeit-inpost--blocks')) {
                 placeBlocksPicker(picker);
             }
             picker.hidden = !visible;
-            var selected = picker.querySelector('[data-wco-inpost-selected]');
-            var open = picker.querySelector('[data-wco-inpost-open]');
+            var selected = picker.querySelector('[data-madeit-inpost-selected]');
+            var open = picker.querySelector('[data-madeit-inpost-open]');
             if (selected) {
                 var text = state.point ? formatSelected() : '';
                 selected.hidden = !state.point;
@@ -93,8 +93,8 @@
                     open.textContent = label;
                 }
             }
-            var point = picker.querySelector('input[name="wco_inpost_point"]');
-            var description = picker.querySelector('input[name="wco_inpost_point_desc"]');
+            var point = picker.querySelector('input[name="madeit_inpost_point"]');
+            var description = picker.querySelector('input[name="madeit_inpost_point_desc"]');
             if (point) {
                 point.value = state.point;
             }
@@ -111,7 +111,7 @@
         render();
     }
 
-    window.wcoInpostOnPoint = function (point) {
+    window.madeitInpostOnPoint = function (point) {
         if (!point || !point.name) {
             return;
         }
@@ -155,13 +155,13 @@
             return;
         }
         overlay = document.createElement('div');
-        overlay.className = 'wco-inpost-modal';
+        overlay.className = 'madeit-inpost-modal';
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
-        overlay.innerHTML = '<div class="wco-inpost-modal__box"><button type="button" class="wco-inpost-modal__close" aria-label="Zamknij">×</button><div class="wco-inpost-modal__map"></div></div>';
+        overlay.innerHTML = '<div class="madeit-inpost-modal__box"><button type="button" class="madeit-inpost-modal__close" aria-label="Zamknij">×</button><div class="madeit-inpost-modal__map"></div></div>';
         document.body.appendChild(overlay);
         overlay.addEventListener('click', function (event) {
-            if (event.target === overlay || event.target.classList.contains('wco-inpost-modal__close')) {
+            if (event.target === overlay || event.target.classList.contains('madeit-inpost-modal__close')) {
                 closeModal();
             }
         });
@@ -170,8 +170,8 @@
             widget.setAttribute('token', cfg.token);
             widget.setAttribute('language', cfg.language);
             widget.setAttribute('config', 'parcelCollect');
-            widget.setAttribute('onpoint', 'wcoInpostOnPoint');
-            var holder = overlay && overlay.querySelector('.wco-inpost-modal__map');
+            widget.setAttribute('onpoint', 'madeitInpostOnPoint');
+            var holder = overlay && overlay.querySelector('.madeit-inpost-modal__map');
             if (holder) {
                 holder.appendChild(widget);
             }
@@ -179,7 +179,7 @@
     }
 
     document.addEventListener('click', function (event) {
-        if (event.target.closest && event.target.closest('[data-wco-inpost-open]')) {
+        if (event.target.closest && event.target.closest('[data-madeit-inpost-open]')) {
             event.preventDefault();
             openModal();
         }
@@ -187,7 +187,7 @@
 
     document.addEventListener('input', function (event) {
         var input = event.target;
-        if (!input.matches || !input.matches('[data-wco-inpost-manual]')) {
+        if (!input.matches || !input.matches('[data-madeit-inpost-manual]')) {
             return;
         }
         var value = input.value.trim().toUpperCase();

@@ -1,6 +1,6 @@
 <?php
 
-namespace WcoInpost;
+namespace MadeitInpost;
 
 /**
  * Klient API ShipX InPost (tworzenie przesyłek, status, etykieta).
@@ -48,7 +48,7 @@ final class ShipX
             return $response;
         }
         if ((int) wp_remote_retrieve_response_code($response) !== 200) {
-            return new \WP_Error('wco_inpost_label', 'ShipX nie zwrócił etykiety (jeszcze się generuje albo przesyłka jest nieopłacona). Spróbuj za chwilę.');
+            return new \WP_Error('madeit_inpost_label', 'ShipX nie zwrócił etykiety (jeszcze się generuje albo przesyłka jest nieopłacona). Spróbuj za chwilę.');
         }
 
         return (string) wp_remote_retrieve_body($response);
@@ -75,7 +75,7 @@ final class ShipX
         }
         $response = wp_remote_request($this->base().$path, $args);
         if (is_wp_error($response)) {
-            return new \WP_Error('wco_inpost_http', 'Nie można połączyć się z ShipX: '.$response->get_error_message());
+            return new \WP_Error('madeit_inpost_http', 'Nie można połączyć się z ShipX: '.$response->get_error_message());
         }
         $code = (int) wp_remote_retrieve_response_code($response);
         $data = json_decode((string) wp_remote_retrieve_body($response), true);
@@ -84,10 +84,10 @@ final class ShipX
             return $data;
         }
         if ($code === 401 || $code === 403) {
-            return new \WP_Error('wco_inpost_auth', 'ShipX odrzucił token lub identyfikator organizacji. Sprawdź dane w zakładce Połączenie.');
+            return new \WP_Error('madeit_inpost_auth', 'ShipX odrzucił token lub identyfikator organizacji. Sprawdź dane w zakładce Połączenie.');
         }
 
-        return new \WP_Error('wco_inpost_api', 'ShipX: '.self::describeError($data, $code));
+        return new \WP_Error('madeit_inpost_api', 'ShipX: '.self::describeError($data, $code));
     }
 
     /**

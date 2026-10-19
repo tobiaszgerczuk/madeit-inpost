@@ -1,6 +1,6 @@
 <?php
 
-namespace WcoInpost;
+namespace MadeitInpost;
 
 /**
  * Czysta logika wtyczki: koszt dostawy, walidacja punktu i budowa przesyłki ShipX. Bez WordPressa.
