@@ -7,7 +7,7 @@
  * Requires at least: 6.6
  * Requires PHP: 8.0
  * Requires Plugins: woocommerce
- * Author: WCO Labs
+ * Author: MadeIT Labs
  * Author URI: https://labs.made-it.pl/en
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html

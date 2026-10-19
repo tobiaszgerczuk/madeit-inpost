@@ -27,7 +27,7 @@ MadeIT InPost adds the "InPost Parcel Locker" shipping method to WooCommerce. Wh
 
 **MadeIT InPost Pro**
 
-An optional add-on from WCO Labs (sold separately at [labs.made-it.pl/en](https://labs.made-it.pl/en/plugins/madeit-inpost-pro)) creates InPost shipments from the order screen through the ShipX API, downloads PDF labels, passes cash on delivery, and lets you edit the texts and the accent colour. The free plugin is complete on its own.
+An optional add-on from MadeIT Labs (sold separately at [labs.made-it.pl/en](https://labs.made-it.pl/en/plugins/madeit-inpost-pro)) creates InPost shipments from the order screen through the ShipX API, downloads PDF labels, passes cash on delivery, and lets you edit the texts and the accent colour. The free plugin is complete on its own.
 
 == External services ==
 
