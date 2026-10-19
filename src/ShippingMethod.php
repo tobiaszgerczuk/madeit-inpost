@@ -1,11 +1,11 @@
 <?php
 
-namespace MadeitInpost;
+namespace Madeit\Inpost;
 
 defined('ABSPATH') || exit;
 
 /**
- * Metoda wysyłki „Paczkomat InPost” dostępna w strefach wysyłki WooCommerce.
+ * The "InPost Parcel Locker" shipping method, available in the WooCommerce shipping zones.
  */
 final class ShippingMethod extends \WC_Shipping_Method
 {
@@ -18,22 +18,22 @@ final class ShippingMethod extends \WC_Shipping_Method
     {
         $this->id = self::ID;
         $this->instance_id = absint($instanceId);
-        $this->method_title = 'Paczkomat InPost (MadeIT)';
-        $this->method_description = 'Dostawa do wybranego na mapie paczkomatu InPost.';
+        $this->method_title = __('InPost Parcel Locker (MadeIT)', 'madeit-inpost');
+        $this->method_description = __('Delivery to an InPost parcel locker chosen on a map.', 'madeit-inpost');
         $this->supports = ['shipping-zones', 'instance-settings', 'instance-settings-modal'];
         $this->init_form_fields();
         $this->init_settings();
-        $this->title = (string) $this->get_option('title', 'Paczkomat InPost');
+        $this->title = (string) $this->get_option('title', __('InPost Parcel Locker', 'madeit-inpost'));
         add_action('woocommerce_update_options_shipping_'.$this->id.'_'.$this->instance_id, [$this, 'process_admin_options']);
     }
 
     public function init_form_fields(): void
     {
         $this->instance_form_fields = [
-            'title' => ['title' => 'Nazwa metody', 'type' => 'text', 'default' => 'Paczkomat InPost', 'desc_tip' => true, 'description' => 'Widoczna dla klienta w koszyku i na stronie płatności.'],
-            'cost' => ['title' => 'Koszt dostawy', 'type' => 'price', 'default' => '12.99', 'desc_tip' => true, 'description' => 'Kwota netto, jeśli sklep nalicza podatek od wysyłki.'],
-            'free_from' => ['title' => 'Darmowa od kwoty', 'type' => 'price', 'default' => '', 'placeholder' => 'Bez progu', 'desc_tip' => true, 'description' => 'Wartość produktów po rabatach, od której dostawa jest gratis. Puste pole wyłącza próg.'],
-            'tax_status' => ['title' => 'Podatek', 'type' => 'select', 'class' => 'wc-enhanced-select', 'default' => 'taxable', 'options' => ['taxable' => 'Opodatkowana', 'none' => 'Brak']],
+            'title' => ['title' => __('Method name', 'madeit-inpost'), 'type' => 'text', 'default' => __('InPost Parcel Locker', 'madeit-inpost'), 'desc_tip' => true, 'description' => __('Shown to the customer in the cart and at checkout.', 'madeit-inpost')],
+            'cost' => ['title' => __('Shipping cost', 'madeit-inpost'), 'type' => 'price', 'default' => '12.99', 'desc_tip' => true, 'description' => __('The net amount if your shop charges tax on shipping.', 'madeit-inpost')],
+            'free_from' => ['title' => __('Free from', 'madeit-inpost'), 'type' => 'price', 'default' => '', 'placeholder' => __('No threshold', 'madeit-inpost'), 'desc_tip' => true, 'description' => __('The value of products after discounts from which shipping is free. Leave empty to turn the threshold off.', 'madeit-inpost')],
+            'tax_status' => ['title' => __('Tax status', 'madeit-inpost'), 'type' => 'select', 'class' => 'wc-enhanced-select', 'default' => 'taxable', 'options' => ['taxable' => __('Taxable', 'madeit-inpost'), 'none' => __('None', 'madeit-inpost')]],
         ];
     }
 

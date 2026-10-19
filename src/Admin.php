@@ -1,45 +1,88 @@
 <?php
 
-namespace MadeitInpost;
+namespace Madeit\Inpost;
+
+defined('ABSPATH') || exit;
+
+// The screens are built from strings in which every dynamic value is escaped at the point where it is added (esc_html, esc_attr, esc_url, wp_kses).
+// The tab only selects what a read-only screen shows; changes go through admin-post.php with a nonce.
+// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.NonceVerification.Recommended
 
 final class Admin
 {
-    private const TABS = ['scope' => 'Zakres', 'connection' => 'Połączenie', 'appearance' => 'Wygląd', 'content' => 'Treści'];
+    public const UPGRADE_URL = 'https://labs.made-it.pl/en/plugins/madeit-inpost-pro';
+
+    public function register(): void
+    {
+        add_action('admin_menu', [$this, 'menu']);
+        add_action('admin_enqueue_scripts', [$this, 'assets']);
+    }
+
+    public function menu(): void
+    {
+        add_menu_page(__('MadeIT InPost', 'madeit-inpost'), __('MadeIT InPost', 'madeit-inpost'), 'manage_woocommerce', Plugin::PAGE, [$this, 'renderSettings'], 'dashicons-location-alt', 58);
+        add_submenu_page(Plugin::PAGE, __('Settings', 'madeit-inpost'), __('Settings', 'madeit-inpost'), 'manage_woocommerce', Plugin::PAGE, [$this, 'renderSettings']);
+    }
+
+    public function assets(): void
+    {
+        // Only used to decide whether to load the stylesheets on this plugin's own screens.
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        /**
+         * Screens of this plugin that load its stylesheets. The Pro add-on adds its licence screen.
+         *
+         * @param  array<int, string>  $pages
+         */
+        if (! in_array($page, (array) apply_filters('madeit_inpost_admin_pages', [Plugin::PAGE]), true)) {
+            return;
+        }
+        wp_enqueue_style('madeit-inpost-admin', plugins_url('assets/admin.css', MADEIT_INPOST_FILE), [], MADEIT_INPOST_VERSION);
+        wp_enqueue_style('madeit-inpost-preview', plugins_url('assets/frontend.css', MADEIT_INPOST_FILE), [], MADEIT_INPOST_VERSION);
+    }
 
     public function renderSettings(): void
     {
         if (! current_user_can('manage_woocommerce')) {
-            wp_die('Brak uprawnień.');
+            wp_die(esc_html__('You do not have permission to do this.', 'madeit-inpost'));
         }
-
+        /**
+         * Settings tabs. The Pro add-on appends its own.
+         *
+         * @param  array<string, string>  $tabs
+         */
+        $tabs = (array) apply_filters('madeit_inpost_settings_tabs', ['scope' => __('Scope', 'madeit-inpost'), 'map' => __('Map', 'madeit-inpost')]);
         $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'scope';
-        $tab = array_key_exists($tab, self::TABS) ? $tab : 'scope';
+        $tab = array_key_exists($tab, $tabs) ? $tab : 'scope';
         $settings = Plugin::settings();
-        $content = Plugin::content();
         $methods = Plugin::methods();
         $enabled = count(array_filter($methods, static fn (array $row): bool => $row['enabled']));
-        $shipx = $settings['organization_id'] !== '' && $settings['api_token'] !== '';
 
-        echo '<div class="wrap madeit-admin"><div class="madeit-hero"><div><span class="madeit-eyebrow">MADEIT INPOST / KONFIGURACJA</span><h1>Paczkomaty InPost</h1><p>Klient wybiera paczkomat na mapie w checkoucie, a Ty tworzysz przesyłki i drukujesz etykiety bez wychodzenia z WooCommerce.</p></div>';
-        echo '<a class="madeit-button madeit-button-light" href="'.esc_url(admin_url('admin.php?page='.Plugin::LICENSE_PAGE)).'">Licencja <span aria-hidden="true">↗</span></a></div>';
-        $this->notice();
-        echo '<div class="madeit-stats"><div class="madeit-stat"><span>Aktywne metody w strefach</span><strong>'.esc_html((string) $enabled).'</strong></div>';
-        echo '<div class="madeit-stat"><span>Mapa paczkomatów</span><strong>'.esc_html($settings['geowidget_token'] !== '' ? 'Włączona' : 'Pole z kodem punktu').'</strong></div>';
-        echo '<div class="madeit-stat madeit-stat-note"><span>Etykiety ShipX</span><strong>'.esc_html($shipx ? ($settings['sandbox'] === 'yes' ? 'Sandbox' : 'Produkcja') : 'Nie skonfigurowano').'</strong></div></div>';
+        echo '<div class="wrap madeit-admin"><div class="madeit-hero"><div><span class="madeit-eyebrow">'.esc_html__('MADEIT INPOST / SETTINGS', 'madeit-inpost').'</span><h1>'.esc_html__('InPost Parcel Lockers', 'madeit-inpost').'</h1><p>'.esc_html__('Customers choose a parcel locker on a map at checkout, and the point is saved in the order.', 'madeit-inpost').'</p></div>';
+        do_action('madeit_inpost_hero');
+        echo '</div>';
+        $notice = isset($_GET['madeit_notice']) ? sanitize_key(wp_unslash($_GET['madeit_notice'])) : '';
+        $messages = (array) apply_filters('madeit_inpost_notice_messages', ['settings' => __('Settings saved.', 'madeit-inpost')]);
+        if (isset($messages[$notice])) {
+            echo '<div class="madeit-notice" role="status">'.esc_html($messages[$notice]).'</div>';
+        }
+        echo '<div class="madeit-stats"><div class="madeit-stat"><span>'.esc_html__('Active methods in zones', 'madeit-inpost').'</span><strong>'.esc_html((string) $enabled).'</strong></div>';
+        echo '<div class="madeit-stat"><span>'.esc_html__('Parcel locker map', 'madeit-inpost').'</span><strong>'.esc_html($settings['geowidget_token'] !== '' ? __('On', 'madeit-inpost') : __('Point code field', 'madeit-inpost')).'</strong></div>';
+        echo '<div class="madeit-stat madeit-stat-note"><span>'.esc_html__('Choosing a point', 'madeit-inpost').'</span><strong>'.esc_html($settings['require_point'] === 'yes' ? __('Required', 'madeit-inpost') : __('Optional', 'madeit-inpost')).'</strong></div></div>';
 
-        echo '<nav class="madeit-tabs" aria-label="Ustawienia InPost">';
-        foreach (self::TABS as $key => $label) {
+        echo '<nav class="madeit-tabs" aria-label="'.esc_attr__('InPost settings', 'madeit-inpost').'">';
+        foreach ($tabs as $key => $label) {
             $url = add_query_arg(['page' => Plugin::PAGE, 'tab' => $key], admin_url('admin.php'));
             echo '<a class="'.($tab === $key ? 'is-active' : '').'" href="'.esc_url($url).'"'.($tab === $key ? ' aria-current="page"' : '').'>'.esc_html($label).'</a>';
         }
         echo '</nav>';
 
-        match ($tab) {
-            'connection' => $this->connectionTab($settings),
-            'appearance' => $this->appearanceTab($settings, $content),
-            'content' => $this->contentTab($settings, $content),
-            default => $this->scopeTab($settings, $methods),
-        };
+        if ($tab === 'scope') {
+            $this->scopeTab($settings, $methods);
+        } elseif ($tab === 'map') {
+            $this->mapTab($settings);
+        } else {
+            do_action('madeit_inpost_render_settings_tab', $tab);
+        }
         echo '</div>';
     }
 
@@ -55,31 +98,25 @@ final class Admin
      */
     private function scopeTab(array $settings, array $methods): void
     {
-        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>Zachowanie w checkoucie i przesyłkach</h2><p>Koszt i próg darmowej dostawy ustawiasz przy metodzie „Paczkomat InPost” w strefie wysyłki WooCommerce.</p></div></div>';
+        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>'.esc_html__('Checkout behaviour', 'madeit-inpost').'</h2><p>'.esc_html__('You set the cost and the free shipping threshold on the "InPost Parcel Locker" method in the WooCommerce shipping zone.', 'madeit-inpost').'</p></div></div>';
         $this->formOpen('scope');
-        echo '<label class="madeit-check"><input type="checkbox" name="require_point" value="1"'.checked($settings['require_point'], 'yes', false).'><span>Wymagaj wyboru paczkomatu przed złożeniem zamówienia</span></label>';
-        echo '<label><span>Domyślny gabaryt</span><select name="default_size">';
-        foreach (['A' => 'A: mała (do 8 cm)', 'B' => 'B: średnia (do 19 cm)', 'C' => 'C: duża (do 41 cm)'] as $value => $label) {
-            echo '<option value="'.esc_attr($value).'"'.selected($settings['default_size'], $value, false).'>'.esc_html($label).'</option>';
+        echo '<label class="madeit-check"><input type="checkbox" name="require_point" value="1"'.checked($settings['require_point'], 'yes', false).'><span>'.esc_html__('Require choosing a parcel locker before the order is placed', 'madeit-inpost').'</span></label>';
+        echo '<button class="madeit-button madeit-button-primary" type="submit">'.esc_html__('Save', 'madeit-inpost').'</button>';
+        if (! defined('MADEIT_INPOST_PRO_VERSION')) {
+            echo '<p class="madeit-upsell">'.wp_kses(sprintf(/* translators: %s: link to the Pro add-on page */ __('Need shipments, PDF labels and cash on delivery? %s adds them.', 'madeit-inpost'), '<a href="'.esc_url(self::UPGRADE_URL).'" target="_blank" rel="noopener">'.esc_html__('MadeIT InPost Pro', 'madeit-inpost').'</a>'), ['a' => ['href' => [], 'target' => [], 'rel' => []]]).'</p>';
         }
-        echo '</select><small>Możesz go zmienić dla każdego zamówienia przed utworzeniem przesyłki.</small></label>';
-        echo '<label><span>Sposób nadania</span><select name="sending_method">';
-        foreach (['dispatch_order' => 'Odbiór przez kuriera', 'parcel_locker' => 'Nadanie w paczkomacie'] as $value => $label) {
-            echo '<option value="'.esc_attr($value).'"'.selected($settings['sending_method'], $value, false).'>'.esc_html($label).'</option>';
-        }
-        echo '</select></label>';
-        echo '<button class="madeit-button madeit-button-primary" type="submit">Zapisz zakres</button></form></section>';
+        echo '</form></section>';
 
-        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>Metody w strefach wysyłki</h2><p>Dodaj „Paczkomat InPost (MadeIT)” w WooCommerce → Ustawienia → Wysyłka.</p></div><a class="madeit-button madeit-button-outline" href="'.esc_url(admin_url('admin.php?page=wc-settings&tab=shipping')).'">Strefy wysyłki →</a></div>';
+        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>'.esc_html__('Methods in shipping zones', 'madeit-inpost').'</h2><p>'.esc_html__('Add "InPost Parcel Locker (MadeIT)" in WooCommerce → Settings → Shipping.', 'madeit-inpost').'</p></div><a class="madeit-button madeit-button-outline" href="'.esc_url(admin_url('admin.php?page=wc-settings&tab=shipping')).'">'.esc_html__('Shipping zones →', 'madeit-inpost').'</a></div>';
         if (! $methods) {
-            echo '<div class="madeit-empty"><span class="dashicons dashicons-location-alt" aria-hidden="true"></span><h3>Brak metody „Paczkomat InPost”</h3><p>Dodaj ją do strefy wysyłki (np. Polska), a klienci zobaczą wybór paczkomatu.</p></div>';
+            echo '<div class="madeit-empty"><span class="dashicons dashicons-location-alt" aria-hidden="true"></span><h3>'.esc_html__('No "InPost Parcel Locker" method', 'madeit-inpost').'</h3><p>'.esc_html__('Add it to a shipping zone (for example Poland) and customers will see the parcel locker choice.', 'madeit-inpost').'</p></div>';
         } else {
             echo '<div class="madeit-list">';
             foreach ($methods as $row) {
-                $free = (float) $row['free_from'] > 0 ? 'Gratis od '.wp_strip_all_tags(wc_price((float) $row['free_from'])) : 'Bez progu darmowej dostawy';
+                $free = (float) $row['free_from'] > 0 ? sprintf(/* translators: %s: amount */ __('Free from %s', 'madeit-inpost'), wp_strip_all_tags(wc_price((float) $row['free_from']))) : __('No free shipping threshold', 'madeit-inpost');
                 echo '<article class="madeit-row"><div class="madeit-row-identity"><strong>'.esc_html($row['zone']).'</strong><small>'.esc_html($free).'</small></div>';
-                echo '<div class="madeit-row-balance"><span class="madeit-cell-label">Koszt</span><strong>'.wp_kses_post(wc_price((float) $row['cost'])).'</strong></div>';
-                echo '<div class="madeit-row-status"><span class="madeit-cell-label">Metoda</span><span class="madeit-badge madeit-badge-'.($row['enabled'] ? 'success' : 'muted').'">'.($row['enabled'] ? 'Włączona' : 'Wyłączona').'</span></div></article>';
+                echo '<div class="madeit-row-balance"><span class="madeit-cell-label">'.esc_html__('Cost', 'madeit-inpost').'</span><strong>'.wp_kses_post(wc_price((float) $row['cost'])).'</strong></div>';
+                echo '<div class="madeit-row-status"><span class="madeit-cell-label">'.esc_html__('Method', 'madeit-inpost').'</span><span class="madeit-badge madeit-badge-'.($row['enabled'] ? 'success' : 'muted').'">'.esc_html($row['enabled'] ? __('Enabled', 'madeit-inpost') : __('Disabled', 'madeit-inpost')).'</span></div></article>';
             }
             echo '</div>';
         }
@@ -89,76 +126,31 @@ final class Admin
     /**
      * @param  array<string, string>  $settings
      */
-    private function connectionTab(array $settings): void
+    private function mapTab(array $settings): void
     {
-        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>Połączenie z InPost</h2><p>Dane znajdziesz w Managerze Paczek InPost, w zakładce API. Token mapy (Geowidget) i token ShipX to dwa różne klucze.</p></div></div>';
-        $this->formOpen('connection');
-        echo '<label><span>Token mapy (Geowidget)</span><input type="text" name="geowidget_token" value="'.esc_attr($settings['geowidget_token']).'" autocomplete="off" spellcheck="false"><small>Bez tokenu klient wpisuje kod punktu ręcznie zamiast wybierać go na mapie.</small></label>';
-        echo '<label><span>Identyfikator organizacji ShipX</span><input type="text" name="organization_id" value="'.esc_attr($settings['organization_id']).'" inputmode="numeric" autocomplete="off"></label>';
-        echo '<label><span>Token API ShipX</span><input type="password" name="api_token" value="'.esc_attr($settings['api_token']).'" autocomplete="off" spellcheck="false"><small>Potrzebny do tworzenia przesyłek i pobierania etykiet. Token daje dostęp do Twojego konta InPost, więc nie udostępniaj go nikomu.</small></label>';
-        echo '<label class="madeit-check"><input type="checkbox" name="sandbox" value="1"'.checked($settings['sandbox'], 'yes', false).'><span>Tryb testowy (sandbox InPost): dla tokenów z konta testowego</span></label>';
-        echo '<button class="madeit-button madeit-button-primary" type="submit">Zapisz połączenie</button></form></section>';
+        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>'.esc_html__('Parcel locker map', 'madeit-inpost').'</h2><p>'.esc_html__('The map is the official InPost Geowidget. You get the token in the InPost Parcel Manager, on the API tab.', 'madeit-inpost').'</p></div></div>';
+        $this->formOpen('map');
+        echo '<label><span>'.esc_html__('Map token (Geowidget)', 'madeit-inpost').'</span><input type="text" name="geowidget_token" value="'.esc_attr($settings['geowidget_token']).'" autocomplete="off" spellcheck="false"><small>'.esc_html__('Without a token customers type the point code instead of choosing it on the map. When a token is set, the map script is loaded from InPost when a customer opens the map.', 'madeit-inpost').'</small></label>';
+        echo '<label class="madeit-check"><input type="checkbox" name="sandbox" value="1"'.checked($settings['sandbox'], 'yes', false).'><span>'.esc_html__('Test mode (InPost sandbox): for tokens from a test account', 'madeit-inpost').'</span></label>';
+        echo '<button class="madeit-button madeit-button-primary" type="submit">'.esc_html__('Save map', 'madeit-inpost').'</button></form></section>';
     }
 
     /**
+     * A static preview of the picker (colour and texts). Also used by the Pro add-on.
+     *
      * @param  array<string, string>  $settings
      * @param  array<string, string>  $content
      */
-    private function appearanceTab(array $settings, array $content): void
+    public static function preview(array $settings, array $content): string
     {
-        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>Wygląd wyboru paczkomatu</h2><p>Kolor przycisku i ramki. Tło dopasowuje się do motywu sklepu.</p></div></div>';
-        echo '<div class="madeit-settings-layout">';
-        $this->formOpen('appearance');
-        echo '<label><span>Kolor akcentu</span><input type="color" name="accent" value="'.esc_attr($settings['accent']).'"></label>';
-        echo '<button class="madeit-button madeit-button-primary" type="submit">Zapisz wygląd</button></form>';
-        echo '<div class="madeit-settings-preview">'.$this->preview($settings, $content).'</div></div></section>';
-    }
-
-    /**
-     * @param  array<string, string>  $settings
-     * @param  array<string, string>  $content
-     */
-    private function contentTab(array $settings, array $content): void
-    {
-        $fields = [
-            'hint' => ['Podpowiedź nad przyciskiem', 'Krótkie wyjaśnienie, co klient ma zrobić.'],
-            'button_choose' => ['Przycisk przed wyborem', 'Tekst na przycisku otwierającym mapę.'],
-            'button_change' => ['Przycisk po wyborze', 'Tekst na przycisku, gdy punkt jest już wybrany.'],
-            'selected' => ['Komunikat o wybranym punkcie', 'Znaczniki: {point} (kod punktu), {address} (adres).'],
-            'missing' => ['Błąd braku wyboru', 'Pokazywany, gdy klient próbuje złożyć zamówienie bez paczkomatu.'],
-        ];
-        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>Teksty widoczne dla klientów</h2><p>Dostępne znaczniki: {point}, {address}.</p></div></div>';
-        echo '<div class="madeit-settings-layout">';
-        $this->formOpen('content');
-        foreach ($fields as $key => [$label, $hint]) {
-            echo '<label><span>'.esc_html($label).'</span><textarea name="'.esc_attr($key).'" rows="2">'.esc_textarea($content[$key]).'</textarea><small>'.esc_html($hint).'</small></label>';
-        }
-        echo '<button class="madeit-button madeit-button-primary" type="submit">Zapisz treści</button></form>';
-        echo '<div class="madeit-settings-preview">'.$this->preview($settings, $content).'</div></div></section>';
-    }
-
-    /**
-     * @param  array<string, string>  $settings
-     * @param  array<string, string>  $content
-     */
-    private function preview(array $settings, array $content): string
-    {
-        $selected = Calculator::fillTemplate(esc_html($content['selected']), ['point' => 'WAW01M', 'address' => 'ul. Marszałkowska 10, Warszawa']);
+        $selected = Calculator::fillTemplate(esc_html($content['selected']), ['point' => 'WAW01M', 'address' => __('10 Marszalkowska St, Warsaw', 'madeit-inpost')]);
         $style = '--madeit-inpost-accent:'.esc_attr($settings['accent']);
-        $out = '<span>Podgląd w checkoucie</span>';
+        $out = '<span>'.esc_html__('Preview at checkout', 'madeit-inpost').'</span>';
         $out .= '<div class="madeit-inpost madeit-inpost--preview" style="'.$style.'"><p class="madeit-inpost__hint">'.esc_html($content['hint']).'</p><button type="button" class="madeit-inpost__button" tabindex="-1">'.esc_html($content['button_choose']).'</button></div>';
-        $out .= '<small class="madeit-preview-caption">Przed wyborem punktu</small>';
+        $out .= '<small class="madeit-preview-caption">'.esc_html__('Before a point is chosen', 'madeit-inpost').'</small>';
         $out .= '<div class="madeit-inpost madeit-inpost--preview" style="'.$style.'"><p class="madeit-inpost__hint">'.esc_html($content['hint']).'</p><button type="button" class="madeit-inpost__button" tabindex="-1">'.esc_html($content['button_change']).'</button><p class="madeit-inpost__selected">'.$selected.'</p></div>';
-        $out .= '<small class="madeit-preview-caption">Po wyborze punktu</small>';
+        $out .= '<small class="madeit-preview-caption">'.esc_html__('After a point is chosen', 'madeit-inpost').'</small>';
 
         return $out;
-    }
-
-    private function notice(): void
-    {
-        $notice = isset($_GET['madeit_notice']) ? sanitize_key(wp_unslash($_GET['madeit_notice'])) : '';
-        if ($notice === 'settings') {
-            echo '<div class="madeit-notice" role="status">Ustawienia zapisane.</div>';
-        }
     }
 }

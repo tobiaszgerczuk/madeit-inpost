@@ -1,6 +1,6 @@
 /**
- * Wybór paczkomatu InPost w checkoucie klasycznym i blokowym.
- * Mapa to oficjalny widżet InPost Geowidget; bez tokenu pokazujemy pole na kod punktu.
+ * InPost parcel locker choice in the classic and the block checkout.
+ * The map is the official InPost Geowidget; without a token a point code field is shown.
  */
 (function () {
     'use strict';
@@ -62,7 +62,7 @@
 
     var shippingSelector = '.wc-block-components-shipping-rates-control';
 
-    // W checkoucie blokowym picker trafia z PHP pod cały blok. Przenosimy go pod opcje wysyłki, żeby klient widział go zaraz po wyborze InPost.
+    // In the block checkout the picker comes from PHP after the whole block. Move it under the shipping options so the customer sees it right after choosing InPost.
     function placeBlocksPicker(picker) {
         var control = document.querySelector(shippingSelector);
         if (!control || !control.parentNode || picker.previousElementSibling === control) {
@@ -158,7 +158,7 @@
         overlay.className = 'madeit-inpost-modal';
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
-        overlay.innerHTML = '<div class="madeit-inpost-modal__box"><button type="button" class="madeit-inpost-modal__close" aria-label="Zamknij">×</button><div class="madeit-inpost-modal__map"></div></div>';
+        overlay.innerHTML = '<div class="madeit-inpost-modal__box"><button type="button" class="madeit-inpost-modal__close" aria-label="' + cfg.close.replace(/"/g, '') + '">×</button><div class="madeit-inpost-modal__map"></div></div>';
         document.body.appendChild(overlay);
         overlay.addEventListener('click', function (event) {
             if (event.target === overlay || event.target.classList.contains('madeit-inpost-modal__close')) {
@@ -238,7 +238,7 @@
                 try {
                     render();
                 } catch (error) {
-                    // Wybór paczkomatu jest dodatkiem: błąd nie może zepsuć płatności.
+                    // Choosing a parcel locker is an extra: an error must never break the checkout.
                 }
             });
         });

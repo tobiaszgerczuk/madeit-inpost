@@ -1,0 +1,331 @@
+# Copyright (C) 2026 WCO Labs
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: MadeIT InPost 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/madeit-inpost\n"
+"Last-Translator: WCO Labs <sklep@wco-labs.pl>\n"
+"Language-Team: Polish\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-19T11:37:12+00:00\n"
+"PO-Revision-Date: 2026-10-19 12:00+0000\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: madeit-inpost\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+#. Plugin Name of the plugin
+#: madeit-inpost.php
+#: src/Admin.php:23
+msgid "MadeIT InPost"
+msgstr "MadeIT InPost"
+
+#. Plugin URI of the plugin
+#: madeit-inpost.php
+msgid "https://labs.made-it.pl/en/plugins/madeit-inpost"
+msgstr ""
+
+#. Description of the plugin
+#: madeit-inpost.php
+msgid "An InPost parcel locker shipping method for WooCommerce with a map to choose the pickup point at checkout."
+msgstr "Metoda wysyłki do paczkomatu InPost dla WooCommerce z mapą do wyboru punktu odbioru w checkoucie."
+
+#. Author of the plugin
+#: madeit-inpost.php
+msgid "WCO Labs"
+msgstr ""
+
+#. Author URI of the plugin
+#: madeit-inpost.php
+msgid "https://labs.made-it.pl/en"
+msgstr ""
+
+#: src/Admin.php:24
+#: src/Plugin.php:350
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: src/Admin.php:46
+#: src/Plugin.php:361
+msgid "You do not have permission to do this."
+msgstr "Brak uprawnień."
+
+#: src/Admin.php:53
+msgid "Scope"
+msgstr "Zakres"
+
+#: src/Admin.php:53
+msgid "Map"
+msgstr "Mapa"
+
+#: src/Admin.php:60
+msgid "MADEIT INPOST / SETTINGS"
+msgstr "MADEIT INPOST / KONFIGURACJA"
+
+#: src/Admin.php:60
+msgid "InPost Parcel Lockers"
+msgstr "Paczkomaty InPost"
+
+#: src/Admin.php:60
+msgid "Customers choose a parcel locker on a map at checkout, and the point is saved in the order."
+msgstr "Klient wybiera paczkomat na mapie w checkoucie, a punkt zapisuje się w zamówieniu."
+
+#: src/Admin.php:64
+msgid "Settings saved."
+msgstr "Ustawienia zapisane."
+
+#: src/Admin.php:68
+msgid "Active methods in zones"
+msgstr "Aktywne metody w strefach"
+
+#: src/Admin.php:69
+#: src/Admin.php:131
+msgid "Parcel locker map"
+msgstr "Mapa paczkomatów"
+
+#: src/Admin.php:69
+msgid "On"
+msgstr "Włączona"
+
+#: src/Admin.php:69
+msgid "Point code field"
+msgstr "Pole z kodem punktu"
+
+#: src/Admin.php:70
+msgid "Choosing a point"
+msgstr "Wybór punktu"
+
+#: src/Admin.php:70
+msgid "Required"
+msgstr "Wymagany"
+
+#: src/Admin.php:70
+msgid "Optional"
+msgstr "Opcjonalny"
+
+#: src/Admin.php:72
+msgid "InPost settings"
+msgstr "Ustawienia InPost"
+
+#: src/Admin.php:101
+msgid "Checkout behaviour"
+msgstr "Zachowanie w checkoucie"
+
+#: src/Admin.php:101
+msgid "You set the cost and the free shipping threshold on the \"InPost Parcel Locker\" method in the WooCommerce shipping zone."
+msgstr "Koszt i próg darmowej dostawy ustawiasz przy metodzie „Paczkomat InPost” w strefie wysyłki WooCommerce."
+
+#: src/Admin.php:103
+msgid "Require choosing a parcel locker before the order is placed"
+msgstr "Wymagaj wyboru paczkomatu przed złożeniem zamówienia"
+
+#: src/Admin.php:104
+msgid "Save"
+msgstr "Zapisz"
+
+#. translators: %s: link to the Pro add-on page
+#: src/Admin.php:106
+#, php-format
+msgid "Need shipments, PDF labels and cash on delivery? %s adds them."
+msgstr "Potrzebujesz przesyłek, etykiet PDF i pobrania? Dodaje je %s."
+
+#. translators: %s: link to the Pro add-on page
+#: src/Admin.php:106
+#: src/Orders.php:48
+msgid "MadeIT InPost Pro"
+msgstr "MadeIT InPost Pro"
+
+#: src/Admin.php:110
+msgid "Methods in shipping zones"
+msgstr "Metody w strefach wysyłki"
+
+#: src/Admin.php:110
+msgid "Add \"InPost Parcel Locker (MadeIT)\" in WooCommerce → Settings → Shipping."
+msgstr "Dodaj „Paczkomat InPost (MadeIT)” w WooCommerce → Ustawienia → Wysyłka."
+
+#: src/Admin.php:110
+msgid "Shipping zones →"
+msgstr "Strefy wysyłki →"
+
+#: src/Admin.php:112
+msgid "No \"InPost Parcel Locker\" method"
+msgstr "Brak metody „Paczkomat InPost”"
+
+#: src/Admin.php:112
+msgid "Add it to a shipping zone (for example Poland) and customers will see the parcel locker choice."
+msgstr "Dodaj ją do strefy wysyłki (np. Polska), a klienci zobaczą wybór paczkomatu."
+
+#. translators: %s: amount
+#: src/Admin.php:116
+#, php-format
+msgid "Free from %s"
+msgstr "Gratis od %s"
+
+#. translators: %s: amount
+#: src/Admin.php:116
+msgid "No free shipping threshold"
+msgstr "Bez progu darmowej dostawy"
+
+#: src/Admin.php:118
+msgid "Cost"
+msgstr "Koszt"
+
+#: src/Admin.php:119
+msgid "Method"
+msgstr "Metoda"
+
+#: src/Admin.php:119
+msgid "Enabled"
+msgstr "Włączona"
+
+#: src/Admin.php:119
+msgid "Disabled"
+msgstr "Wyłączona"
+
+#: src/Admin.php:131
+msgid "The map is the official InPost Geowidget. You get the token in the InPost Parcel Manager, on the API tab."
+msgstr "Mapa to oficjalny widżet InPost Geowidget. Token znajdziesz w Managerze Paczek InPost, w zakładce API."
+
+#: src/Admin.php:133
+msgid "Map token (Geowidget)"
+msgstr "Token mapy (Geowidget)"
+
+#: src/Admin.php:133
+msgid "Without a token customers type the point code instead of choosing it on the map. When a token is set, the map script is loaded from InPost when a customer opens the map."
+msgstr "Bez tokenu klient wpisuje kod punktu zamiast wybierać go na mapie. Gdy token jest ustawiony, skrypt mapy ładuje się z InPost, gdy klient otworzy mapę."
+
+#: src/Admin.php:134
+msgid "Test mode (InPost sandbox): for tokens from a test account"
+msgstr "Tryb testowy (sandbox InPost): dla tokenów z konta testowego"
+
+#: src/Admin.php:135
+msgid "Save map"
+msgstr "Zapisz mapę"
+
+#: src/Admin.php:146
+msgid "10 Marszalkowska St, Warsaw"
+msgstr "ul. Marszałkowska 10, Warszawa"
+
+#: src/Admin.php:148
+msgid "Preview at checkout"
+msgstr "Podgląd w checkoucie"
+
+#: src/Admin.php:150
+msgid "Before a point is chosen"
+msgstr "Przed wyborem punktu"
+
+#: src/Admin.php:152
+msgid "After a point is chosen"
+msgstr "Po wyborze punktu"
+
+#: src/Orders.php:20
+msgid "InPost"
+msgstr "InPost"
+
+#: src/Orders.php:34
+msgid "This order does not use the \"InPost Parcel Locker\" method."
+msgstr "To zamówienie nie używa metody „Paczkomat InPost”."
+
+#: src/Orders.php:39
+msgid "Point:"
+msgstr "Punkt:"
+
+#. translators: %s: link to the Pro add-on page
+#: src/Orders.php:48
+#, php-format
+msgid "Create shipments and print labels from the order with %s."
+msgstr "Twórz przesyłki i drukuj etykiety z poziomu zamówienia dzięki %s."
+
+#: src/Plugin.php:46
+msgid "Choose a parcel locker on the map"
+msgstr "Wybierz paczkomat na mapie"
+
+#: src/Plugin.php:47
+msgid "Change parcel locker"
+msgstr "Zmień paczkomat"
+
+#: src/Plugin.php:48
+msgid "Selected point: {point}, {address}"
+msgstr "Wybrany punkt: {point}, {address}"
+
+#: src/Plugin.php:49
+msgid "Choose the InPost parcel locker we should send your order to."
+msgstr "Wybierz paczkomat InPost, do którego mamy wysłać zamówienie."
+
+#: src/Plugin.php:50
+msgid "Click the button and pick a pickup point on the map."
+msgstr "Kliknij przycisk i wskaż punkt odbioru na mapie."
+
+#: src/Plugin.php:113
+#: src/Plugin.php:330
+#: src/Plugin.php:340
+#: src/ShippingMethod.php:26
+#: src/ShippingMethod.php:33
+msgid "InPost Parcel Locker"
+msgstr "Paczkomat InPost"
+
+#: src/Plugin.php:201
+msgid "Enter the code of the InPost parcel locker we should send your order to."
+msgstr "Wpisz kod paczkomatu InPost, do którego mamy wysłać zamówienie."
+
+#: src/Plugin.php:203
+msgid "InPost point code"
+msgstr "Kod punktu InPost"
+
+#: src/Plugin.php:203
+msgid "E.g. WAW01M"
+msgstr "Np. WAW01M"
+
+#: src/Plugin.php:258
+msgid "Close"
+msgstr "Zamknij"
+
+#: src/ShippingMethod.php:21
+msgid "InPost Parcel Locker (MadeIT)"
+msgstr "Paczkomat InPost (MadeIT)"
+
+#: src/ShippingMethod.php:22
+msgid "Delivery to an InPost parcel locker chosen on a map."
+msgstr "Dostawa do wybranego na mapie paczkomatu InPost."
+
+#: src/ShippingMethod.php:33
+msgid "Method name"
+msgstr "Nazwa metody"
+
+#: src/ShippingMethod.php:33
+msgid "Shown to the customer in the cart and at checkout."
+msgstr "Widoczna dla klienta w koszyku i na stronie płatności."
+
+#: src/ShippingMethod.php:34
+msgid "Shipping cost"
+msgstr "Koszt dostawy"
+
+#: src/ShippingMethod.php:34
+msgid "The net amount if your shop charges tax on shipping."
+msgstr "Kwota netto, jeśli sklep nalicza podatek od wysyłki."
+
+#: src/ShippingMethod.php:35
+msgid "Free from"
+msgstr "Darmowa od kwoty"
+
+#: src/ShippingMethod.php:35
+msgid "No threshold"
+msgstr "Bez progu"
+
+#: src/ShippingMethod.php:35
+msgid "The value of products after discounts from which shipping is free. Leave empty to turn the threshold off."
+msgstr "Wartość produktów po rabatach, od której dostawa jest gratis. Puste pole wyłącza próg."
+
+#: src/ShippingMethod.php:36
+msgid "Tax status"
+msgstr "Podatek"
+
+#: src/ShippingMethod.php:36
+msgid "Taxable"
+msgstr "Opodatkowana"
+
+#: src/ShippingMethod.php:36
+msgid "None"
+msgstr "Brak"

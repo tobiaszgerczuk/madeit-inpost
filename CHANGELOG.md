@@ -1,9 +1,5 @@
-# Zmiany
+# Changelog
 
-## 0.1.0
+## 1.0.0
 
-- Metoda wysyłki „Paczkomat InPost” z kosztem i progiem darmowej dostawy.
-- Wybór paczkomatu na mapie InPost Geowidget w checkoucie klasycznym i blokowym, z polem na kod punktu, gdy brak tokenu.
-- Tworzenie przesyłek ShipX z poziomu zamówienia, odświeżanie statusu i pobieranie etykiety PDF.
-- W checkoucie blokowym wybór paczkomatu pojawia się tuż pod opcjami wysyłki.
-- Licencja i aktualizacje przez WCO Labs (https://labs.made-it.pl).
+- First public release: the "InPost Parcel Locker" shipping method with a cost and a free shipping threshold, the InPost map (Geowidget) in the classic and the block checkout, a point code field when there is no map token, the point saved in the order and shown to the customer and in the admin. Shipments, labels and cash on delivery moved to the paid MadeIT InPost Pro add-on.

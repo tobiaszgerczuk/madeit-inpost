@@ -1,25 +1,15 @@
 # MadeIT InPost
 
-Wybór paczkomatu InPost na mapie w checkoucie WooCommerce (klasycznym i blokowym) oraz tworzenie przesyłek i etykiet przez ShipX.
+Free WooCommerce plugin with an InPost parcel locker shipping method and a map to choose the point at checkout (classic and block). Published on WordPress.org; the optional paid add-on is [madeit-inpost-pro](https://github.com/tobiaszgerczuk/madeit-inpost-pro).
 
-## Funkcje
+## Extension points for the Pro add-on
 
-- Metoda wysyłki „Paczkomat InPost” w strefach wysyłki: koszt i próg darmowej dostawy.
-- Wybór punktu na mapie InPost Geowidget; bez tokenu mapy klient wpisuje kod punktu.
-- Punkt zapisany w zamówieniu, widoczny w panelu, na stronie zamówienia i w e-mailach.
-- W zamówieniu: utworzenie przesyłki ShipX, status, numer przesyłki i etykieta PDF (A6).
-- Pobranie (COD) przekazywane do ShipX, gdy zamówienie ma płatność przy odbiorze.
+Filters: `madeit_inpost_settings`, `madeit_inpost_content`, `madeit_inpost_settings_tabs`, `madeit_inpost_admin_pages`, `madeit_inpost_notice_messages`. Actions: `madeit_inpost_hero`, `madeit_inpost_render_settings_tab`, `madeit_inpost_order_box` (order screen box), `madeit_inpost_point_saved` (a point was saved in a new order). Static helper `Madeit\Inpost\Admin::preview()` renders the live preview.
 
-## Konfiguracja
+## Tests
 
-1. WooCommerce → Ustawienia → Wysyłka → strefa → dodaj „Paczkomat InPost (MadeIT)”.
-2. MadeIT InPost → Połączenie: token mapy (Geowidget), identyfikator organizacji i token API ShipX z Managera Paczek.
-3. Zakładka Zakres: domyślny gabaryt i sposób nadania.
+`php tests/calculator.php` checks the shipping cost and point validation without WordPress. `tests/smoke.php` runs with `wp eval-file` in an isolated test shop.
 
-## Testy
+## Release
 
-```
-php tests/calculator.php
-```
-
-Pełny test: skopiuj wtyczkę do demo WooCommerce i sprawdź checkout oraz zamówienie.
+Bump `Version` in `madeit-inpost.php` and `Stable tag` in `readme.txt`, add a `## X.Y.Z` section to `CHANGELOG.md` and push a `vX.Y.Z` tag. The workflow builds the ZIP, publishes it to the shop downloads and, once the SVN secrets exist, deploys to WordPress.org.

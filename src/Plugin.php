@@ -1,34 +1,37 @@
 <?php
 
-namespace MadeitInpost;
+namespace Madeit\Inpost;
 
 use Automattic\WooCommerce\StoreApi\Exceptions\RouteException;
 use Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema;
+
+defined('ABSPATH') || exit;
+
+// The checkout forms are processed by WooCommerce, which verifies its own checkout nonce before these hooks run.
+// phpcs:disable WordPress.Security.NonceVerification.Missing
 
 final class Plugin
 {
     public const PAGE = 'madeit-inpost';
 
-    public const LICENSE_PAGE = 'madeit-inpost-license';
-
     public const EXTENSION = 'madeit-inpost';
+
+    public const META_POINT = '_madeit_inpost_point';
+
+    public const META_POINT_DESCRIPTION = '_madeit_inpost_point_desc';
 
     private const GEOWIDGET = 'https://geowidget.inpost.pl';
 
     private const GEOWIDGET_SANDBOX = 'https://sandbox-geowidget.inpost.pl';
 
     /**
-     * @return array{geowidget_token: string, sandbox: string, organization_id: string, api_token: string, default_size: string, sending_method: string, require_point: string, accent: string}
+     * @return array{geowidget_token: string, sandbox: string, require_point: string, accent: string}
      */
     public static function settingDefaults(): array
     {
         return [
             'geowidget_token' => '',
             'sandbox' => 'no',
-            'organization_id' => '',
-            'api_token' => '',
-            'default_size' => 'A',
-            'sending_method' => 'dispatch_order',
             'require_point' => 'yes',
             'accent' => '#294a74',
         ];
@@ -40,11 +43,11 @@ final class Plugin
     public static function contentDefaults(): array
     {
         return [
-            'button_choose' => 'Wybierz paczkomat na mapie',
-            'button_change' => 'Zmień paczkomat',
-            'selected' => 'Wybrany punkt: {point}, {address}',
-            'missing' => 'Wybierz paczkomat InPost, do którego mamy wysłać zamówienie.',
-            'hint' => 'Kliknij przycisk i wskaż punkt odbioru na mapie.',
+            'button_choose' => __('Choose a parcel locker on the map', 'madeit-inpost'),
+            'button_change' => __('Change parcel locker', 'madeit-inpost'),
+            'selected' => __('Selected point: {point}, {address}', 'madeit-inpost'),
+            'missing' => __('Choose the InPost parcel locker we should send your order to.', 'madeit-inpost'),
+            'hint' => __('Click the button and pick a pickup point on the map.', 'madeit-inpost'),
         ];
     }
 
@@ -53,16 +56,21 @@ final class Plugin
      */
     public static function settings(): array
     {
+        $defaults = self::settingDefaults();
         $saved = get_option('madeit_inpost_settings', []);
-        $settings = array_merge(self::settingDefaults(), is_array($saved) ? array_intersect_key($saved, self::settingDefaults()) : []);
+        $settings = array_merge($defaults, is_array($saved) ? array_intersect_key($saved, $defaults) : []);
         $settings = array_map(static fn ($value): string => trim((string) $value), $settings);
-        $settings['accent'] = sanitize_hex_color($settings['accent']) ?: self::settingDefaults()['accent'];
-        $settings['default_size'] = Calculator::normalizeSize($settings['default_size']);
-        $settings['sending_method'] = $settings['sending_method'] === 'parcel_locker' ? 'parcel_locker' : 'dispatch_order';
+        /**
+         * Lets the Pro add-on supply the accent colour.
+         *
+         * @param  array<string, string>  $settings
+         */
+        $settings = array_merge($settings, array_intersect_key((array) apply_filters('madeit_inpost_settings', $settings), $defaults));
+        $settings['accent'] = sanitize_hex_color((string) $settings['accent']) ?: $defaults['accent'];
         $settings['sandbox'] = $settings['sandbox'] === 'yes' ? 'yes' : 'no';
         $settings['require_point'] = $settings['require_point'] === 'no' ? 'no' : 'yes';
 
-        return $settings;
+        return array_map('strval', $settings);
     }
 
     /**
@@ -70,21 +78,20 @@ final class Plugin
      */
     public static function content(): array
     {
-        $saved = get_option('madeit_inpost_content', []);
-        $content = array_merge(self::contentDefaults(), is_array($saved) ? array_intersect_key($saved, self::contentDefaults()) : []);
+        $defaults = self::contentDefaults();
+        /**
+         * Lets the Pro add-on replace the customer-facing texts.
+         *
+         * @param  array<string, string>  $content
+         */
+        $content = (array) apply_filters('madeit_inpost_content', $defaults);
+        $content = array_merge($defaults, array_intersect_key($content, $defaults));
 
         return array_map(static fn ($value): string => (string) $value, $content);
     }
 
-    public static function shipx(): ShipX
-    {
-        $settings = self::settings();
-
-        return new ShipX($settings['organization_id'], $settings['api_token'], $settings['sandbox'] === 'yes');
-    }
-
     /**
-     * Metody „Paczkomat InPost” w strefach wysyłki.
+     * "InPost Parcel Locker" methods in the shipping zones.
      *
      * @return array<int, array{zone: string, title: string, cost: string, free_from: string, enabled: bool}>
      */
@@ -103,7 +110,7 @@ final class Plugin
                 }
                 $rows[] = [
                     'zone' => $zone->get_zone_name(),
-                    'title' => (string) $method->get_option('title', 'Paczkomat InPost'),
+                    'title' => (string) $method->get_option('title', __('InPost Parcel Locker', 'madeit-inpost')),
                     'cost' => (string) $method->get_option('cost', '0'),
                     'free_from' => (string) $method->get_option('free_from', ''),
                     'enabled' => $method->is_enabled(),
@@ -133,11 +140,10 @@ final class Plugin
         add_action('woocommerce_order_details_after_customer_details', [$this, 'showPointInOrder']);
         add_action('woocommerce_email_after_order_table', [$this, 'showPointInEmail'], 10, 4);
         add_action('wp_enqueue_scripts', [$this, 'frontendAssets']);
-        add_action('admin_menu', [$this, 'adminMenu']);
-        add_action('admin_enqueue_scripts', [$this, 'adminAssets']);
         add_action('admin_post_madeit_inpost_save', [$this, 'saveSettings']);
         add_filter('plugin_action_links_'.plugin_basename(MADEIT_INPOST_FILE), [$this, 'actionLinks']);
         (new Orders)->register();
+        (new Admin)->register();
     }
 
     public function registerStoreApi(): void
@@ -158,7 +164,7 @@ final class Plugin
     }
 
     /**
-     * Czy w tym zamówieniu klient wybrał metodę InPost.
+     * Whether the customer chose the InPost method for this order.
      */
     public static function orderUsesInpost(\WC_Order $order): bool
     {
@@ -192,9 +198,9 @@ final class Plugin
         $inputs = $placement === 'classic'
             ? '<input type="hidden" name="madeit_inpost_point" value=""><input type="hidden" name="madeit_inpost_point_desc" value="">'
             : '';
-        $hint = $settings['geowidget_token'] === '' ? 'Wpisz kod paczkomatu InPost, do którego mamy wysłać zamówienie.' : $content['hint'];
+        $hint = $settings['geowidget_token'] === '' ? __('Enter the code of the InPost parcel locker we should send your order to.', 'madeit-inpost') : $content['hint'];
         $manual = $settings['geowidget_token'] === ''
-            ? '<label class="madeit-inpost__manual"><span>Kod punktu InPost</span><input type="text" data-madeit-inpost-manual maxlength="20" placeholder="Np. WAW01M" autocomplete="off"></label>'
+            ? '<label class="madeit-inpost__manual"><span>'.esc_html__('InPost point code', 'madeit-inpost').'</span><input type="text" data-madeit-inpost-manual maxlength="20" placeholder="'.esc_attr__('E.g. WAW01M', 'madeit-inpost').'" autocomplete="off"></label>'
             : '';
 
         return '<div class="madeit-inpost madeit-inpost--'.esc_attr($placement).'" data-madeit-inpost hidden style="--madeit-inpost-accent:'.esc_attr($settings['accent']).'">'
@@ -209,7 +215,7 @@ final class Plugin
     public function classicPicker(): void
     {
         $this->enqueueCheckout();
-        echo '<tr class="madeit-inpost-row"><td colspan="2">'.$this->pickerMarkup('classic').'</td></tr>'; // Znaczniki są escapowane przy budowaniu.
+        echo '<tr class="madeit-inpost-row"><td colspan="2">'.$this->pickerMarkup('classic').'</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped while the markup is built.
     }
 
     public function blockPicker(string $content, array $block): string
@@ -226,40 +232,40 @@ final class Plugin
     {
         wp_enqueue_script('madeit-inpost-frontend');
         wp_enqueue_style('madeit-inpost-frontend');
-        wp_enqueue_style('madeit-inpost-geowidget');
+        if (self::settings()['geowidget_token'] !== '') {
+            wp_enqueue_style('madeit-inpost-geowidget');
+        }
     }
 
     public function frontendAssets(): void
     {
-        $directory = plugin_dir_path(MADEIT_INPOST_FILE).'assets/';
         $settings = self::settings();
         $content = self::content();
         $base = $settings['sandbox'] === 'yes' ? self::GEOWIDGET_SANDBOX : self::GEOWIDGET;
-        wp_register_style('madeit-inpost-frontend', plugins_url('assets/frontend.css', MADEIT_INPOST_FILE), [], (string) filemtime($directory.'frontend.css'));
-        wp_register_style('madeit-inpost-geowidget', $settings['geowidget_token'] !== '' ? $base.'/inpost-geowidget.css' : false, [], null);
-        wp_register_script('madeit-inpost-frontend', plugins_url('assets/frontend.js', MADEIT_INPOST_FILE), ['wp-data'], (string) filemtime($directory.'frontend.js'), true);
+        wp_register_style('madeit-inpost-frontend', plugins_url('assets/frontend.css', MADEIT_INPOST_FILE), [], MADEIT_INPOST_VERSION);
+        // The map is InPost's own Geowidget, loaded from InPost only when a token is set and a customer opens the map.
+        wp_register_style('madeit-inpost-geowidget', $base.'/inpost-geowidget.css', [], MADEIT_INPOST_VERSION);
+        wp_register_script('madeit-inpost-frontend', plugins_url('assets/frontend.js', MADEIT_INPOST_FILE), ['wp-data'], MADEIT_INPOST_VERSION, true);
         wp_localize_script('madeit-inpost-frontend', 'madeitInpost', [
             'methodId' => ShippingMethod::ID,
             'extension' => self::EXTENSION,
             'token' => $settings['geowidget_token'],
             'widgetScript' => $base.'/inpost-geowidget.js',
-            'language' => 'pl',
+            'language' => str_starts_with(determine_locale(), 'pl') ? 'pl' : 'en',
             'required' => $settings['require_point'] === 'yes',
             'validName' => '^[A-Z0-9][A-Z0-9-]{2,19}$',
             'content' => $content,
+            'close' => __('Close', 'madeit-inpost'),
         ]);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
     public function validateClassic(): void
     {
         $chosen = (array) (WC()->session ? WC()->session->get('chosen_shipping_methods', []) : []);
         if (! self::chosenIsInpost($chosen) || self::settings()['require_point'] !== 'yes') {
             return;
         }
-        $point = isset($_POST['madeit_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['madeit_inpost_point']))) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+        $point = isset($_POST['madeit_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['madeit_inpost_point']))) : '';
         if (! Calculator::isValidPointName($point)) {
             wc_add_notice(esc_html(self::content()['missing']), 'error');
         }
@@ -273,8 +279,8 @@ final class Plugin
         if (! self::orderUsesInpost($order)) {
             return;
         }
-        $point = isset($_POST['madeit_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['madeit_inpost_point']))) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-        $description = isset($_POST['madeit_inpost_point_desc']) ? sanitize_text_field(wp_unslash($_POST['madeit_inpost_point_desc'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+        $point = isset($_POST['madeit_inpost_point']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['madeit_inpost_point']))) : '';
+        $description = isset($_POST['madeit_inpost_point_desc']) ? sanitize_text_field(wp_unslash($_POST['madeit_inpost_point_desc'])) : '';
         $this->storePoint($order, $point, $description);
     }
 
@@ -298,18 +304,21 @@ final class Plugin
         if (! Calculator::isValidPointName($point)) {
             return;
         }
-        $order->update_meta_data(Orders::META_POINT, $point);
-        $order->update_meta_data(Orders::META_POINT_DESCRIPTION, mb_substr($description, 0, 200));
-        $order->update_meta_data(Orders::META_SIZE, self::settings()['default_size']);
+        $order->update_meta_data(self::META_POINT, $point);
+        $order->update_meta_data(self::META_POINT_DESCRIPTION, mb_substr($description, 0, 200));
+        /**
+         * Runs when a pickup point was saved in a new order. The Pro add-on stores the default parcel size here.
+         */
+        do_action('madeit_inpost_point_saved', $order, $point);
     }
 
     private function pointLine(\WC_Order $order): string
     {
-        $point = (string) $order->get_meta(Orders::META_POINT);
+        $point = (string) $order->get_meta(self::META_POINT);
         if ($point === '') {
             return '';
         }
-        $description = (string) $order->get_meta(Orders::META_POINT_DESCRIPTION);
+        $description = (string) $order->get_meta(self::META_POINT_DESCRIPTION);
 
         return Calculator::fillTemplate(self::content()['selected'], ['point' => $point, 'address' => $description]);
     }
@@ -318,7 +327,7 @@ final class Plugin
     {
         $line = $this->pointLine($order);
         if ($line !== '') {
-            echo '<section class="madeit-inpost-order"><h2 class="woocommerce-column__title">Paczkomat InPost</h2><p>'.esc_html($line).'</p></section>';
+            echo '<section class="madeit-inpost-order"><h2 class="woocommerce-column__title">'.esc_html__('InPost Parcel Locker', 'madeit-inpost').'</h2><p>'.esc_html($line).'</p></section>';
         }
     }
 
@@ -328,13 +337,8 @@ final class Plugin
         if ($line === '') {
             return;
         }
-        echo $plainText ? "\nPaczkomat InPost: ".$line."\n" : '<p><strong>Paczkomat InPost:</strong> '.esc_html($line).'</p>';
-    }
-
-    public function adminMenu(): void
-    {
-        add_menu_page('MadeIT InPost', 'MadeIT InPost', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage'], 'dashicons-location-alt', 58);
-        add_submenu_page(self::PAGE, 'Ustawienia', 'Ustawienia', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage']);
+        $label = __('InPost Parcel Locker', 'madeit-inpost');
+        echo $plainText ? "\n".esc_html($label).': '.esc_html($line)."\n" : '<p><strong>'.esc_html($label).':</strong> '.esc_html($line).'</p>';
     }
 
     /**
@@ -343,61 +347,31 @@ final class Plugin
      */
     public function actionLinks(array $links): array
     {
-        array_unshift($links, '<a href="'.esc_url(admin_url('admin.php?page='.self::PAGE)).'">Ustawienia</a>');
+        array_unshift($links, '<a href="'.esc_url(admin_url('admin.php?page='.self::PAGE)).'">'.esc_html__('Settings', 'madeit-inpost').'</a>');
 
         return $links;
     }
 
-    public function adminAssets(): void
-    {
-        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
-        if (! in_array($page, [self::PAGE, self::LICENSE_PAGE], true)) {
-            return;
-        }
-        $directory = plugin_dir_path(MADEIT_INPOST_FILE).'assets/';
-        wp_enqueue_style('madeit-inpost-admin', plugins_url('assets/admin.css', MADEIT_INPOST_FILE), [], (string) filemtime($directory.'admin.css'));
-        wp_enqueue_style('madeit-inpost-preview', plugins_url('assets/frontend.css', MADEIT_INPOST_FILE), [], (string) filemtime($directory.'frontend.css'));
-    }
-
-    public function settingsPage(): void
-    {
-        (new Admin)->renderSettings();
-    }
-
+    /**
+     * Saves one settings tab. The free plugin has the scope and map tabs.
+     */
     public function saveSettings(): void
     {
         if (! current_user_can('manage_woocommerce')) {
-            wp_die('Brak uprawnień.');
+            wp_die(esc_html__('You do not have permission to do this.', 'madeit-inpost'));
         }
         check_admin_referer('madeit_inpost_save');
         $tab = isset($_POST['tab']) ? sanitize_key(wp_unslash($_POST['tab'])) : 'scope';
-        $settings = self::settings();
-        if ($tab === 'scope') {
-            $settings['require_point'] = ! empty($_POST['require_point']) ? 'yes' : 'no';
-            $size = isset($_POST['default_size']) ? sanitize_text_field(wp_unslash($_POST['default_size'])) : 'A';
-            $settings['default_size'] = Calculator::normalizeSize($size);
-            $method = isset($_POST['sending_method']) ? sanitize_key(wp_unslash($_POST['sending_method'])) : '';
-            $settings['sending_method'] = $method === 'parcel_locker' ? 'parcel_locker' : 'dispatch_order';
-            update_option('madeit_inpost_settings', $settings, false);
-        } elseif ($tab === 'connection') {
-            $settings['geowidget_token'] = isset($_POST['geowidget_token']) ? trim(sanitize_text_field(wp_unslash($_POST['geowidget_token']))) : '';
-            $settings['organization_id'] = isset($_POST['organization_id']) ? preg_replace('/\D+/', '', wp_unslash($_POST['organization_id'])) : '';
-            $settings['api_token'] = isset($_POST['api_token']) ? trim(sanitize_text_field(wp_unslash($_POST['api_token']))) : '';
-            $settings['sandbox'] = ! empty($_POST['sandbox']) ? 'yes' : 'no';
-            update_option('madeit_inpost_settings', $settings, false);
-        } elseif ($tab === 'appearance') {
-            $accent = isset($_POST['accent']) ? sanitize_hex_color(wp_unslash($_POST['accent'])) : null;
-            $settings['accent'] = $accent ?: self::settingDefaults()['accent'];
-            update_option('madeit_inpost_settings', $settings, false);
+        $stored = get_option('madeit_inpost_settings', []);
+        $stored = is_array($stored) ? $stored : [];
+        if ($tab === 'map') {
+            $stored['geowidget_token'] = isset($_POST['geowidget_token']) ? trim(sanitize_text_field(wp_unslash($_POST['geowidget_token']))) : '';
+            $stored['sandbox'] = ! empty($_POST['sandbox']) ? 'yes' : 'no';
         } else {
-            $tab = 'content';
-            $content = [];
-            foreach (self::contentDefaults() as $key => $default) {
-                $value = isset($_POST[$key]) ? sanitize_textarea_field(wp_unslash($_POST[$key])) : $default;
-                $content[$key] = trim($value) === '' ? $default : $value;
-            }
-            update_option('madeit_inpost_content', $content, false);
+            $tab = 'scope';
+            $stored['require_point'] = ! empty($_POST['require_point']) ? 'yes' : 'no';
         }
+        update_option('madeit_inpost_settings', $stored, false);
         wp_safe_redirect(admin_url('admin.php?page='.self::PAGE.'&tab='.$tab.'&madeit_notice=settings'));
         exit;
     }
