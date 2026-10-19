@@ -76,7 +76,7 @@ final class Orders
         echo '</select></label></p>';
         echo '<p><button type="submit" class="button button-primary">Utwórz przesyłkę</button></p></form>';
         if (! Plugin::shipx()->isConfigured()) {
-            echo '<p class="description">Najpierw uzupełnij połączenie z ShipX w ustawieniach Madeit InPost.</p>';
+            echo '<p class="description">Najpierw uzupełnij połączenie z ShipX w ustawieniach MadeIT InPost.</p>';
         }
     }
 

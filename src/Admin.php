@@ -70,7 +70,7 @@ final class Admin
         echo '</select></label>';
         echo '<button class="madeit-button madeit-button-primary" type="submit">Zapisz zakres</button></form></section>';
 
-        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>Metody w strefach wysyłki</h2><p>Dodaj „Paczkomat InPost (Madeit)” w WooCommerce → Ustawienia → Wysyłka.</p></div><a class="madeit-button madeit-button-outline" href="'.esc_url(admin_url('admin.php?page=wc-settings&tab=shipping')).'">Strefy wysyłki →</a></div>';
+        echo '<section class="madeit-card madeit-settings-card"><div class="madeit-section-heading"><div><h2>Metody w strefach wysyłki</h2><p>Dodaj „Paczkomat InPost (MadeIT)” w WooCommerce → Ustawienia → Wysyłka.</p></div><a class="madeit-button madeit-button-outline" href="'.esc_url(admin_url('admin.php?page=wc-settings&tab=shipping')).'">Strefy wysyłki →</a></div>';
         if (! $methods) {
             echo '<div class="madeit-empty"><span class="dashicons dashicons-location-alt" aria-hidden="true"></span><h3>Brak metody „Paczkomat InPost”</h3><p>Dodaj ją do strefy wysyłki (np. Polska), a klienci zobaczą wybór paczkomatu.</p></div>';
         } else {

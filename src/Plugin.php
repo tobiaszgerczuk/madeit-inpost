@@ -333,7 +333,7 @@ final class Plugin
 
     public function adminMenu(): void
     {
-        add_menu_page('Madeit InPost', 'Madeit InPost', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage'], 'dashicons-location-alt', 58);
+        add_menu_page('MadeIT InPost', 'MadeIT InPost', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage'], 'dashicons-location-alt', 58);
         add_submenu_page(self::PAGE, 'Ustawienia', 'Ustawienia', 'manage_woocommerce', self::PAGE, [$this, 'settingsPage']);
     }
 

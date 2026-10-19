@@ -5,7 +5,7 @@ use MadeitInpost\Plugin;
 use MadeitInpost\Updater;
 
 /**
- * Plugin Name: Madeit InPost
+ * Plugin Name: MadeIT InPost
  * Description: Wybór paczkomatu InPost na mapie w checkoucie WooCommerce oraz tworzenie przesyłek i etykiet przez ShipX.
  * Version: 0.1.0
  * Requires at least: 6.6

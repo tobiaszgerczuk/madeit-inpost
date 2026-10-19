@@ -102,7 +102,7 @@ final class Updater
         }
 
         return (object) [
-            'name' => 'Madeit InPost',
+            'name' => 'MadeIT InPost',
             'slug' => 'madeit-inpost',
             'version' => $data['version'],
             'author' => 'WCO Labs',
@@ -184,7 +184,7 @@ final class Updater
 
     public function menu(): void
     {
-        add_submenu_page('madeit-inpost', 'Licencja Madeit InPost', 'Licencja', 'manage_woocommerce', 'madeit-inpost-license', [$this, 'settings']);
+        add_submenu_page('madeit-inpost', 'Licencja MadeIT InPost', 'Licencja', 'manage_woocommerce', 'madeit-inpost-license', [$this, 'settings']);
     }
 
     public function settings(): void
